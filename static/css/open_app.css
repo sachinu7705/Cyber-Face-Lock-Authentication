@@ -1,0 +1,212 @@
+/* open_app.css — Cyber Face Unlock Screen */
+
+:root{
+  --bg:#020203;
+  --grid:#0d0d0d;
+  --accent:#ff2b2b;
+  --accent-soft:rgba(255,0,0,0.15);
+  --muted:#9aa0a6;
+  --mono:"Courier New",monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
+
+/* Background Matrix */
+.cyber-shell{
+  min-height:100vh;
+  background-image:
+    linear-gradient(#0f0f0f 1px, transparent 1px),
+    linear-gradient(90deg, #0f0f0f 1px, transparent 1px);
+  background-size:22px 22px;
+  padding-bottom:50px;
+  color:#fff;
+}
+
+/* HEADER */
+.cyber-top{
+  padding:20px 26px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+.back{
+  text-decoration:none;
+  color:var(--accent);
+  font-family:var(--mono);
+  font-size:15px;
+  font-weight:700;
+}
+.app-title{
+  font-size:15px;
+  letter-spacing:2px;
+}
+
+/* MAIN SCAN PANEL */
+.scan-panel{
+  margin:auto;
+  margin-top:20px;
+  width:100%;
+  max-width:680px;
+  text-align:center;
+}
+
+/* App info */
+.app-box{
+  margin-bottom:24px;
+}
+.icon-wrap img{
+  width:82px;
+  height:82px;
+  border-radius:18px;
+  box-shadow:0 0 18px rgba(255,0,0,0.26);
+}
+.app-name{
+  margin-top:12px;
+  font-size:18px;
+  letter-spacing:1px;
+  font-family:var(--mono);
+  color:#fff;
+}
+
+/* VIDEO AREA */
+.video-box{
+  position:relative;
+  width:100%;
+  background:#000;
+  border-radius:12px;
+  margin-top:12px;
+  border:1px solid rgba(255,255,255,0.06);
+  overflow:hidden;
+}
+video#unlockVideo{
+  width:100%;
+  height:auto;
+  display:block;
+}
+#overlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+/* Scan ring (CSS Only) */
+.scan-ring{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  pointer-events:none;
+  filter:drop-shadow(0 0 22px rgba(255,0,0,0.22));
+}
+.ring-core{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:3px dashed rgba(255,0,0,0.14);
+  animation:spin 6s linear infinite, pulse 2s ease-in-out infinite;
+}
+@keyframes spin{
+  0%{transform:rotate(0deg)}
+  100%{transform:rotate(360deg)}
+}
+@keyframes pulse{
+  0%,100%{transform:scale(0.98); opacity:0.8}
+  50%{transform:scale(1.05); opacity:0.45}
+}
+
+/* status text */
+.status{
+  margin-top:18px;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:14px;
+}
+
+/* button */
+.btn{
+  padding:10px 16px;
+  border-radius:10px;
+  border:none;
+  margin-top:18px;
+  font-weight:700;
+  cursor:pointer;
+  letter-spacing:1px;
+}
+.btn-outline{
+  width:100%;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.12);
+  color:var(--muted);
+}
+.btn-outline:hover{
+  border-color:var(--accent);
+  color:#fff;
+}
+
+/* FOOTER */
+.cyber-footer{
+  margin-top:40px;
+  text-align:center;
+  font-size:12px;
+  color:#b33;
+  font-family:var(--mono);
+}
+
+/* PIN MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.74);
+  backdrop-filter:blur(6px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:0.2s;
+}
+.hidden{
+  opacity:0;
+  pointer-events:none;
+}
+.modal-box{
+  width:86%;
+  max-width:360px;
+  background:#0f0f0f;
+  padding:22px;
+  border-radius:12px;
+  border:1px solid rgba(255,0,0,0.18);
+  box-shadow:0 0 18px rgba(255,0,0,0.2);
+}
+.modal-title{
+  font-size:18px;
+  color:var(--accent);
+  font-family:var(--mono);
+  margin-bottom:14px;
+}
+.modal-input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  background:#111;
+  border:1px solid rgba(255,0,0,0.2);
+  color:#fff;
+  font-size:15px;
+  margin-bottom:16px;
+  outline:none;
+}
+.btn-danger{
+  background:linear-gradient(180deg,#ff3d3d,#cf2727);
+  color:#1a0000;
+  border:1px solid rgba(255,50,50,0.24);
+}
+.btn-ghost{
+  width:100%;
+  margin-top:8px;
+  background:transparent;
+  border:1px dashed rgba(255,255,255,0.08);
+  color:var(--muted);
+}

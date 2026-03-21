@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Installed Apps</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <link rel="stylesheet" href="/static/css/mobile_apps.css">
+</head>
+
+<body class="cyberpunk-shell">
+
+<header class="cyber-top">
+    <button class="back-btn" onclick="history.back()">⟵</button>
+    <div>
+        <div class="title">APPS LAUNCHER</div>
+        <div class="subtitle">Installed Applications</div>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="card section-card">
+        <div class="card-title">Installed Apps</div>
+        <div class="muted small">Tap an app to open. Locked apps require Face/PIN unlock.</div>
+
+        <!-- Search box -->
+        <div class="search-box">
+            <input id="appsSearch" type="text" placeholder="Search apps..." class="search-input">
+            <button id="refreshApps" class="refresh-btn">⟳</button>
+        </div>
+
+        <!-- Apps List -->
+        <div id="appsContainer" class="apps-list"></div>
+
+        <div id="appsStatus" class="status-text small"></div>
+    </div>
+    
+</main>
+
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+    <a href="/mobile/menu" class="nav-item">Menu</a>
+    <a href="/mobile/apps" class="nav-item active">Reload</a>
+    <a href="/mobile/enroll" class="nav-item">Enroll</a>
+</nav>
+<div id="faceScanOverlay" class="face-overlay" style="display: none;">
+    <div class="face-modal">
+        <div class="card-title">FACE AUTHENTICATION</div>
+        <div class="camera-container">
+            <video id="webcam" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div class="scan-line"></div>
+        </div>
+        <div id="scanStatus" class="status-text">Position your face in frame...</div>
+        
+    </div>
+</div>
+<script src="/static/js/mobile_apps.js" defer></script>
+</body>
+</html>

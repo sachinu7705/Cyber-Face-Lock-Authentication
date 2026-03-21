@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Select Apps</title>
+  <link rel="stylesheet" href="/static/css/cyber_common.css">
+  <script src="/static/js/select_apps.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <button onclick="history.back()" class="back">←</button>
+  <div class="header-block">
+    <div class="app-title">SELECT APPS</div>
+    <div class="tagline">Choose apps to lock</div>
+  </div>
+</header>
+
+<main class="list-container">
+
+  <!-- Search -->
+  <div class="search-box">
+      <input id="searchInput" type="text" placeholder="Search apps..." class="search-input">
+  </div>
+
+  <div class="actions-row" style="display:flex; justify-content:space-between; margin-bottom:15px; width:100%;">
+      <div style="display:flex; gap:10px;">
+          <button id="selectAllBtn" class="cyber-btn small-btn">Select All</button>
+          <button id="clearAllBtn" class="cyber-btn small-btn">Clear</button>
+      </div>
+
+      <button id="saveSelectionBtn" class="cyber-btn small-btn">Save Selection</button>
+  </div>
+
+  <div id="appsGrid" class="apps-grid"></div>
+
+  <div id="status" class="status"></div>
+</main>
+
+<!-- EDIT POPUP -->
+<div id="appPopup" class="pin-popup hidden">
+  <div class="pin-popup-box">
+    <div class="pin-popup-title" id="popupTitle">App Settings</div>
+
+    <div style="margin-top:8px;">
+      <label><input type="checkbox" id="opt_pin"> Require PIN</label>
+    </div>
+    <div style="margin-top:8px;">
+      <label><input type="checkbox" id="opt_face"> Use Face Unlock</label>
+    </div>
+
+    <div style="display:flex;gap:10px; margin-top:16px;">
+      <button id="popupSaveBtn" class="cyber-btn small-btn">Save</button>
+      <button id="popupCancelBtn" class="cyber-btn small-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE SUCCESS POPUP -->
+<div id="savePopup" class="pin-popup hidden">
+  <div class="pin-popup-box">
+    <div class="pin-popup-title">App List Updated</div>
+    <p style="margin-bottom:15px; opacity:0.8;">
+      Your locked app list was updated successfully.
+    </p>
+
+    <div style="display:flex; justify-content:center;">
+      <button id="savePopupOk" class="cyber-btn small-btn">OK</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

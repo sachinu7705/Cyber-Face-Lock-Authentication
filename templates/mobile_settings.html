@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <link rel="stylesheet" href="/static/css/mobile_settings.css">
+</head>
+<body>
+
+<canvas id="matrix-bg"></canvas>
+
+<div class="cyber-shell">
+
+    <!-- HEADER -->
+    <div class="cyber-top">
+        <a class="back" href="javascript:history.back()">⟵</a>
+
+        <div>
+            <div class="app-title glitch">SETTINGS</div>
+            <div class="tagline">SYSTEM • SECURITY • FACE ID</div>
+        </div>
+    </div>
+
+    <!-- SETTINGS LIST -->
+    <div class="settings-panel">
+
+        <!-- SECURITY -->
+        <a href="/mobile/change-pin" class="setting-card">
+            <div class="label">CHANGE SECURITY PIN</div>
+            <div class="underline"></div>
+        </a>
+
+        <a href="/mobile/reset-pin" class="setting-card">
+            <div class="label">FORGOT PIN (RESET)</div>
+            <div class="underline"></div>
+        </a>
+
+        <a href="/mobile/reset-pin/new" class="setting-card">
+            <div class="label">RESET PIN USING EMAIL</div>
+            <div class="underline"></div>
+        </a>
+
+        <!-- FACE UNLOCK -->
+        <a href="/mobile/enroll" class="setting-card">
+            <div class="label">ADD / UPDATE FACE</div>
+            <div class="underline"></div>
+        </a>
+
+        <a href="/mobile/unlock" class="setting-card danger">
+            <div class="label">DELETE FACE DATA</div>
+            <div class="underline"></div>
+        </a>
+
+        <!-- LOCKED APPS -->
+        <a href="/mobile/locked-apps" class="setting-card">
+            <div class="label">MANAGE LOCKED APPS</div>
+            <div class="underline"></div>
+        </a>
+
+        <!-- HOME -->
+        <a href="/mobile" class="setting-card danger">
+            <div class="label">BACK TO HOME</div>
+            <div class="underline"></div>
+        </a>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="cyber-footer">
+        CYBER SETTINGS ENGINE
+        <div class="marquee">© 2025 SYSTEM SECURITY</div>
+    </div>
+
+</div>
+
+
+<!-- MATRIX BACKGROUND -->
+<script>
+const canvas = document.getElementById("matrix-bg");
+const ctx = canvas.getContext("2d");
+
+canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+
+const chars = "01";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+let drops = [];
+
+for (let i = 0; i < columns; i++) drops[i] = 1;
+
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.07)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#ff2727";
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+        let text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+        }
+        drops[i]++;
+    }
+}
+setInterval(drawMatrix, 40);
+</script>
+
+</body>
+</html>

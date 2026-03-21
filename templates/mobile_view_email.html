@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Saved Email</title>
+
+  <link rel="stylesheet" href="/static/css/cyber_common.css">
+  <script src="/static/js/view_email.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <button onclick="history.back()" class="back">←</button>
+  <div class="header-block">
+      <div class="app-title">REGISTERED EMAIL</div>
+      <div class="tagline">Your recovery email</div>
+  </div>
+</header>
+<!-- DELETE CONFIRM POPUP -->
+<div id="confirmPopup" class="popup-hidden">
+    <div class="popup-card">
+        <div class="popup-title">Delete Email?</div>
+        <div class="popup-msg">Are you sure you want to remove your recovery email?</div>
+
+        <div class="popup-buttons">
+            <button class="popup-btn cancel" id="cancelDelete">Cancel</button>
+            <button class="popup-btn delete" id="confirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
+
+<main class="glass-section list-container">
+    <div class="email-row" style="display: none;">
+        <div class="email-left">
+            <div id="emailBox" class="email-text">Loading...</div>
+        </div>
+
+        <div class="email-right">
+            <button class="cyber-btn small-btn" onclick="location.href='/mobile/register-email'">
+                Change
+            </button>
+            <button class="danger-btn small-btn" id="deleteEmailBtn">
+                Delete
+            </button>
+        </div>
+    </div>
+
+    <div id="statusMsg" class="status"></div>
+</main>
+
+<main class="glass-section list-container">
+    <div id="statusMsg" class="status"></div>
+</main>
+
+</body>
+</html>

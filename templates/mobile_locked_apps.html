@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Locked Apps</title>
+
+  <!-- Prevent caching issues (important for your JS fixes) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="stylesheet" href="/static/css/cyber_common.css">
+
+  <!-- Defer JS -->
+  <script src="/static/js/locked_apps.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <button onclick="history.back()" class="back">←</button>
+  <div class="header-block">
+      <div class="app-title">LOCKED APPS</div>
+      <div class="tagline">Tap an app to unlock it</div>
+  </div>
+</header>
+
+<main class="list-container">
+
+    <!-- Search Input -->
+    <input 
+        id="searchInput" 
+        class="input" 
+        placeholder="Search vault..." 
+        autocomplete="off"
+        spellcheck="false"
+        style="margin-bottom:18px;"
+    >
+
+    <!-- Apps Container -->
+    <div id="categoryContainer"></div>
+
+    <!-- Status -->
+    <div id="status" class="status" style="margin-top:12px;"></div>
+
+</main>
+
+</body>
+</html>

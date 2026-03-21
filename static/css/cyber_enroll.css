@@ -1,0 +1,173 @@
+/* cyber_enroll.css — Black & Red Cyber Security style */
+
+/* Variables */
+:root{
+  --bg:#030405;
+  --grid:#071116;
+  --card:#0b0b0b;
+  --muted:#9aa0a6;
+  --accent:#ff2b2b;
+  --accent-dim:rgba(255,43,43,0.12);
+  --glass: rgba(255,255,255,0.02);
+  --glow: 0 6px 28px rgba(255,43,43,0.08);
+  --radius:12px;
+  --mono: "Courier New", Courier, monospace;
+}
+
+/* Reset */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+body{background: radial-gradient(1200px 600px at 10% 10%, rgba(20,0,0,0.20), transparent 6%),
+       linear-gradient(180deg, #020203 0%, #030305 100%); color:#e6e6e6; -webkit-font-smoothing:antialiased}
+
+/* matrix grid background */
+.cyber-shell{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-bottom:28px;
+  background-image:
+    linear-gradient(0deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px;
+}
+
+/* top bar */
+.cyber-top{
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  align-items:center;
+  padding:18px 20px;
+  gap:12px;
+  color:var(--muted);
+}
+.cyber-top .back{ color:var(--accent); font-weight:700; text-decoration:none; font-family:var(--mono) }
+.logo { width:34px; height:34px; stroke:var(--accent); fill:none; stroke-width:1.8; opacity:0.95; }
+.app-title{ font-size:13px; color:#fff; letter-spacing:2px; margin:0; font-weight:700 }
+.tagline{ font-size:12px; color:var(--muted); margin:0.2rem 0 0 0 }
+
+/* main panel */
+.cyber-main{ width:100%; max-width:1100px; padding:12px; display:flex; justify-content:center }
+.panel{ display:flex; gap:20px; width:100%; align-items:flex-start }
+
+/* left column - controls */
+.panel-left{
+  width:360px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.03);
+  padding:18px;
+  border-radius:12px;
+  box-shadow:var(--glow);
+}
+.lbl{ display:block; color:var(--muted); font-size:11px; letter-spacing:1px; margin-bottom:6px }
+.in{
+  width:100%;
+  padding:12px 14px;
+  border-radius:8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  color:#fff;
+  font-size:15px;
+  outline:none;
+}
+.in:focus{ border-color:var(--accent); box-shadow:0 6px 18px rgba(255,43,43,0.06) }
+
+/* buttons */
+.btn{ display:inline-block; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; border:0; letter-spacing:1px }
+.btn-wide{ width:100% }
+.btn-danger{ background: linear-gradient(180deg, #ff4b4b, #d92b2b); color:#120000; box-shadow: 0 8px 36px rgba(217,43,43,0.18); border: 1px solid rgba(255,50,50,0.18) }
+.btn-danger:hover{ transform:translateY(-2px) }
+.btn-ghost{ background:transparent; border:1px dashed rgba(255,255,255,0.04); color:var(--muted) }
+.btn-outline{ background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03) }
+
+.btn-row{ margin-top:12px; display:flex; gap:8px; flex-direction:column }
+
+/* right column - video */
+.panel-right{ flex:1; display:flex; flex-direction:column; gap:12px }
+.video-card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,0.03);
+}
+.video-scene{ position:relative; border-radius:10px; overflow:hidden; background:#000; min-height:260px }
+/* video is full */
+video#enrollVideo{ width:100%; height:auto; display:block; }
+
+/* overlay canvas placed on top */
+.overlay{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none }
+
+/* red scan ring (CSS animated) */
+.red-ring{
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:220px; height:220px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  filter: drop-shadow(0 8px 28px rgba(255,0,0,0.12));
+  pointer-events:none;
+  mix-blend-mode:screen;
+  opacity:0.9;
+}
+.red-ring .ring-core{
+  width:86%; height:86%; border-radius:50%;
+  border: 3px solid rgba(255,43,43,0.12);
+  box-shadow: 0 0 40px rgba(255,43,43,0.08), inset 0 0 18px rgba(255,0,0,0.06);
+  position:relative;
+  animation: ring-rotate 6s linear infinite;
+  background: radial-gradient(circle at 30% 30%, rgba(255,43,43,0.02), transparent 20%);
+}
+/* dashed pulse ring */
+.red-ring::after{
+  content:"";
+  position:absolute; inset:-12px; border-radius:50%;
+  border: 2px dashed rgba(255,43,43,0.12);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+
+
+/* status / notes */
+.status{ margin-top:12px; color:var(--muted); font-size:13px; font-family:var(--mono) }
+.notes{ margin-top:10px; color:var(--muted); font-size:13px }
+
+/* footer marquee */
+.cyber-footer{ margin-top:18px; width:100%; max-width:1100px; text-align:center; color:#b33; font-family:var(--mono); padding:8px 0 }
+.marquee{ border-top:1px solid rgba(255,255,255,0.02); padding-top:10px; font-size:12px; color:#ff7b7b }
+
+/* animations */
+@keyframes pulse {
+  0% { transform: scale(0.98); opacity:0.8 }
+  50% { transform: scale(1.06); opacity:0.45 }
+  100% { transform: scale(0.98); opacity:0.8 }
+}
+@keyframes ring-rotate {
+  0%{ transform: rotate(0deg) }
+  100%{ transform: rotate(360deg) }
+}
+
+/* small screens */
+@media (max-width:900px){
+  .panel{ flex-direction:column; gap:12px }
+  .panel-left{ width:100% }
+  .red-ring{ width:180px; height:180px }
+}
+
+
+/* FORCE FIX */
+#thumbList {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px !important;
+}
+
+#thumbList img {
+  width: 100% !important;
+  height: 100px !important;
+  object-fit: cover !important;
+}
+img {
+  max-width: unset !important;
+}

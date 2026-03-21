@@ -1,0 +1,76 @@
+/* select_apps.css — clean cyber theme */
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:Inter,system-ui;
+}
+
+.shell{
+  padding:20px;
+}
+
+.top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+.back{
+  color:#ff3333;
+  text-decoration:none;
+  font-weight:bold;
+}
+.title{
+  margin:0;
+  font-size:22px;
+  letter-spacing:2px;
+}
+
+.loading{
+  font-size:14px;
+  color:#aaa;
+  margin:14px 0;
+}
+
+.apps-list{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.app-row{
+  padding:12px;
+  background:#0d0d0d;
+  border:1px solid #222;
+  border-radius:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.app-name{
+  font-size:15px;
+}
+
+.checkbox{
+  width:20px;
+  height:20px;
+}
+
+.save-btn{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  background:#ff3333;
+  border:none;
+  border-radius:10px;
+  color:#000;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.save-btn:hover{
+  background:#ff5555;
+}

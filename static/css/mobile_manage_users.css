@@ -1,0 +1,104 @@
+/* ============================================
+   Cyberpunk Purple / Black Theme
+   ============================================ */
+
+:root {
+    --bg: #07000f;
+    --panel: #0e0018;
+    --glow-purple: 0 0 18px rgba(178, 0, 255, 0.55);
+    --border-purple: rgba(178, 0, 255, 0.35);
+    --accent-purple: #bb44ff;
+    --accent-light: #e07aff;
+    --text: #e6e1ff;
+    --text-dim: #9c8aad;
+    --radius: 16px;
+    --gradient: linear-gradient(145deg, #2a0040, #0b0016);
+}
+
+/* Background */
+body.cyberpunk-shell {
+    background: radial-gradient(circle at top, #150026, #07000f);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    padding: 16px;
+}
+
+/* Top Bar */
+.cyber-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+}
+
+.back-btn {
+    background: transparent;
+    border: 1px solid var(--border-purple);
+    color: var(--accent-light);
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: var(--glow-purple);
+    transition: 0.2s;
+}
+.back-btn:hover {
+    background: rgba(180, 0, 255, 0.1);
+}
+
+.title {
+    font-size: 22px;
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+
+/* Grid */
+.menu-grid {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 18px;
+}
+
+/* Boxes */
+.menu-box {
+    background: var(--gradient);
+    border: 1px solid var(--border-purple);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 0 28px rgba(155, 0, 255, 0.15);
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+.menu-box:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 36px rgba(200, 0, 255, 0.35);
+}
+
+.neon-purple {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 20px rgba(200, 0, 255, 0.4);
+}
+
+.icon {
+    font-size: 34px;
+    margin-bottom: 10px;
+    color: var(--accent-light);
+}
+
+.label {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.small {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+}

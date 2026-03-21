@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Security PIN</title>
+    <link rel="stylesheet" href="/static/css/mobile_reset_pin.css">
+</head>
+<body>
+
+<canvas id="matrix-bg"></canvas>
+
+<div class="cyber-shell fade-in">
+
+    <header class="cyber-top">
+        <a onclick="history.back()" class="back">← BACK</a>
+        <div>
+            <div class="app-title glitch">RESET SECURITY PIN</div>
+            <div class="tagline">Email Verification • Encryption Enabled</div>
+        </div>
+    </header>
+
+    <div class="reset-box">
+
+        <!-- STEP 1 -->
+        <div class="step" id="stepEmail">
+            <div class="step-title">STEP 1 — VERIFY EMAIL</div>
+
+            <input id="emailInput" type="email" class="in" placeholder="Enter registered email">
+
+            <button id="sendCodeBtn" class="btn neon-btn">SEND RESET CODE</button>
+
+            <div id="msgEmail" class="msg"></div>
+
+            <!-- Resend -->
+            <div id="resendTimer" class="timer hidden">Resend available in <span id="tCount">30</span>s</div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step hidden" id="stepCode">
+            <div class="step-title">STEP 2 — ENTER CODE</div>
+
+            <input id="codeInput" type="text" class="in" placeholder="6-digit verification code">
+
+            <button id="verifyCodeBtn" class="btn neon-btn-outline">VERIFY CODE</button>
+
+            <div id="msgCode" class="msg"></div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step hidden" id="stepNewPin">
+            <div class="step-title">STEP 3 — SET NEW PIN</div>
+
+            <input id="newPinInput" type="password" class="in" placeholder="New PIN (min 4 digits)">
+
+            <button id="setNewPinBtn" class="btn neon-btn">RESET PIN</button>
+
+            <div id="msgPin" class="msg"></div>
+        </div>
+
+    </div>
+
+    <!-- HOLOGRAM SUCCESS POPUP -->
+    <div id="holoSuccess" class="holo-popup hidden">
+        <div class="holo-title">✔ PIN UPDATED</div>
+        <div class="holo-sub">Redirecting...</div>
+    </div>
+
+    <footer class="cyber-footer">
+        <div class="marquee">ENCRYPTED • VERIFIED • SECURE RESET</div>
+    </footer>
+
+</div>
+
+<script src="/static/js/mobile_reset_pin.js"></script>
+</body>
+</html>

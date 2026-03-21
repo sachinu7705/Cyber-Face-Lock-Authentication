@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cyber Lock — Menu</title>
+
+  <link rel="stylesheet" href="/static/css/mobile_menu.css">
+</head>
+
+<body class="cyber-shell">
+
+<!-- BACKGROUND -->
+<canvas id="bgCanvas" class="bg-canvas"></canvas>
+
+<!-- HEADER -->
+<header class="topbar">
+  <div class="left">
+    <span class="brand">CYBER MENU</span>
+  </div>
+  <div class="right">
+    <button id="themeToggle" class="icon-btn">⚡</button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="main-grid">
+
+  <!-- LEFT -->
+  <section class="panel-left">
+    <div class="card menu-card">
+
+      <div class="menu-title">SYSTEM MENU</div>
+
+      <!-- HUD FACE ICON -->
+      <div class="hud-preview">
+        <div class="hud-ring neon-ring">
+          <div class="hud-core">
+            <svg viewBox="0 0 100 100" class="face-icon">
+              <circle cx="50" cy="50" r="22" stroke="currentColor" stroke-width="2" fill="none"/>
+              <rect x="30" y="62" width="40" height="6" rx="3" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENU BUTTONS -->
+      <div class="menu-list">
+
+        <button id="btnLockedApps" class="menu-btn">🔒 Locked Apps</button>
+        <button id="btnSelectApps" class="menu-btn">📱 Select Apps</button>
+        <button id="btnChangePin" class="menu-btn">🔑 Change PIN</button>
+        <button id="btnLogout" class="menu-btn danger">⏻ Logout</button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="panel-right">
+    <!-- USER MANAGEMENT PANEL -->
+    <div class="menu-box" id="manageUsersBtn">
+      <div class="menu-icon">👤</div>
+      <div class="menu-title">Manage Users</div>
+      <div class="menu-desc">Add, remove or view enrolled users</div>
+      <div class="menu-item" onclick="location.href='/mobile/register-email'">Register Email</div>
+    </div>
+
+    <!-- ADD USER -->
+    
+
+    <!-- VIEW USERS -->
+    <div class="menu-box" id="viewUsersBtn">
+      <div class="menu-icon">📑</div>
+      <div class="menu-title">View Users</div>
+      <div class="menu-desc">See all saved users</div>
+    </div>
+
+    <div class="menu-box" onclick="location.href='/mobile/view-email'">
+      <div class="menu-icon">📧</div>
+      <div class="menu-title">View Saved Email</div>
+      <div class="menu-desc">Check your registered email</div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <span>© 2025 CYBER LOCK</span>
+  <span>LOCAL • SECURE • OFFLINE</span>
+</footer>
+
+<script src="/static/js/mobile_menu.js"></script>
+</body>
+</html>

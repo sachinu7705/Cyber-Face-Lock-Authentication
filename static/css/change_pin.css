@@ -1,0 +1,127 @@
+:root{
+  --bg:#020203;
+  --card:#0a0a0a;
+  --accent:#ff2727;
+  --muted:#888;
+  --mono:"Courier New", monospace;
+}
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#020203;
+  color:white;
+  font-family:Inter,system-ui;
+  overflow-x:hidden;
+}
+
+#matrix-bg{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  opacity:0.3;
+}
+
+.cyber-shell{ padding:20px; }
+
+/* Header */
+.cyber-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:25px;
+}
+.back{
+  color:var(--accent);
+  font-family:var(--mono);
+  text-decoration:none;
+  font-size:16px;
+}
+.app-title{
+  font-size:22px;
+  letter-spacing:3px;
+}
+.tagline{
+  font-size:12px;
+  color:var(--muted);
+  letter-spacing:2px;
+}
+
+/* main panel */
+.panel{
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.pin-card{
+  background:linear-gradient(180deg,#0b0b0b,#070707);
+  padding:25px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.05);
+  width:100%;
+  max-width:450px;
+  box-shadow:0 0 18px rgba(255,0,0,0.22);
+}
+
+.lbl{
+  font-size:12px;
+  color:var(--muted);
+  letter-spacing:2px;
+  margin-top:10px;
+  display:block;
+}
+
+.pin-input{
+  width:100%;
+  padding:12px;
+  background:#000;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  color:white;
+  margin-top:6px;
+  font-size:16px;
+}
+.pin-input:focus{
+  border-color:var(--accent);
+}
+
+/* button */
+.btn-danger{
+  margin-top:18px;
+  padding:12px;
+  font-size:15px;
+  font-weight:700;
+  width:100%;
+  border-radius:10px;
+  border:0;
+  background:linear-gradient(180deg,#ff4747,#cc2222);
+  color:#000;
+  cursor:pointer;
+}
+.btn-danger:hover{
+  transform:translateY(-3px);
+}
+
+/* status */
+.status{
+  margin-top:12px;
+  font-family:var(--mono);
+  font-size:14px;
+  color:var(--accent);
+  text-align:center;
+}
+
+/* footer */
+.cyber-footer{
+  text-align:center;
+  margin-top:40px;
+  color:#b33;
+}
+.marquee{
+  margin-top:5px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  font-size:12px;
+  font-family:var(--mono);
+}

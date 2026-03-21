@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLock — Create PIN</title>
+
+    <link rel="stylesheet" href="/static/css/reset.css">
+</head>
+<body>
+
+<div id="theme-toggle" class="theme-toggle">🌗</div>
+
+<div class="wrap">
+    <div class="card">
+
+        <button id="closeCreate" class="close-btn">✕</button>
+
+        <div class="glow-blob"></div>
+
+        <h1>Create PIN</h1>
+        <p class="lead">Set your secure PIN</p>
+
+        <div class="steps">
+            <div class="step" id="stepLabel-1">Email</div>
+            <div class="step" id="stepLabel-2">OTP</div>
+            <div class="step" id="stepLabel-3">Create PIN</div>
+        </div>
+
+        <div id="content"></div>
+
+        <div class="bottom-bar">
+            <button class="btn ghost" id="backBtn" style="display:none">Back</button>
+            <button type="button" class="btn" id="nextBtn">Continue</button>
+        </div>
+
+    </div>
+</div>
+
+<script src="/static/js/create_pin.js"></script>
+
+</body>
+</html>

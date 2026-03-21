@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Enroll — Smart Face Lock (Cyber)</title>
+
+  
+  <!-- Cyber CSS -->
+  <link rel="stylesheet" href="/static/css/cyber_enroll.css">
+
+  <!-- Inline fallback for video styling -->
+  <style>video{display:block;width:100%;height:auto;background:#000}</style>
+</head>
+<body>
+  <div class="cyber-shell">
+    <header class="cyber-top">
+      <div class="left">   
+        <a class="back" href="/mobile" aria-label="Back">⟵</a>
+      </div>
+      <div class="center">
+        <div class="logo-wrap">
+          <svg class="logo" viewBox="0 0 24 24" aria-hidden>
+            <path d="M4 2v2a2 2 0 0 0 2 2h2"/>
+            <path d="M4 22v-2a2 2 0 0 1 2-2h2"/>
+            <path d="M20 2v2a2 2 0 0 1-2 2h-2"/>
+            <path d="M20 22v-2a2 2 0 0 0-2-2h-2"/>
+            <path d="M9 10v3"/><path d="M15 10v3"/><path d="M9 16h6"/>
+          </svg>
+        </div>
+        <h1 class="app-title">SMART FACE LOCK</h1>
+        <p class="tagline">Local Enrollment — PenTest Mode</p>
+      </div>
+      <div class="right"></div>
+    </header>
+
+    <main class="cyber-main">
+      <section class="panel">
+        <div class="panel-left">
+          <label class="lbl">USER NAME</label>
+          <input id="enrollName" class="in" placeholder="e.g. sachin">
+          <label class="lbl">ADMIN PIN</label>
+          <input id="enrollPin" class="in" placeholder="4-DIGIT-PIN" type="password">
+
+          <div class="btn-row">
+            <button id="startScanBtn" class="btn btn-danger">START SCAN</button>
+            <button id="cancelScanBtn" class="btn btn-ghost">CANCEL</button>
+          </div>
+
+          <div id="scanStatus" class="status">Ready. Use <strong>Start Scan</strong>.</div>
+
+          <div class="notes">
+            <p><strong>Tip:</strong> Follow on-screen ring. Good lighting recommended.</p>
+          </div>
+        </div>
+
+        <div class="panel-right">
+          <div class="video-card">
+            <div class="video-scene">
+              <video id="enrollVideo" autoplay playsinline muted></video>
+              <canvas id="overlay" class="overlay"></canvas>
+
+              <!-- decorative red scan ring (CSS animated) -->
+              <div class="red-ring" aria-hidden>
+                <div class="ring-core"></div>
+              </div>
+            </div>
+
+            <div class="thumbs" id="thumbList" aria-live="polite"></div>
+            <button id="confirmUploadBtn" class="btn btn-danger btn-wide">SAVE FACE</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="cyber-footer">
+      <div class="marquee">⚠️ CYBER MODE — LOCAL ONLY • DO NOT DEPLOY WITH DEFAULT PIN ⚠️</div>
+    </footer>
+
+    <!-- keep linking to your mobile.js (scanning + mediapipe code) -->
+    <script>window.pageType='enroll'</script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="/static/js/mobile.js"></script>
+  </div>
+</body>
+</html>

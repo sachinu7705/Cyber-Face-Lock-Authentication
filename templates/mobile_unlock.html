@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unlock — Cyber HUD</title>
+  <link rel="stylesheet" href="/static/css/cyber_unlock.css">
+</head>
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <a class="back" href="javascript:history.back()">⟵</a>
+
+  <div>
+    <div class="app-title">CYBER FACE UNLOCK</div>
+    <div class="tagline">Retina HUD • Local Mode</div>
+  </div>
+</header>
+
+<div class="cyber-main">
+  <div class="panel">
+    <div class="panel-left">
+      <label class="lbl">Fallback PIN</label>
+      <input id="unlockPin" type="password" class="in" placeholder="Enter PIN">
+
+      <div class="btn-row" style="margin-top:16px;">
+        <button id="startUnlockCam" class="btn btn-danger btn-wide">Start Camera</button>
+        <button id="captureUnlockBtn" class="btn btn-outline btn-wide">Retina Scan</button>
+        <button id="stopUnlockCam" class="btn btn-ghost btn-wide">Stop Camera</button>
+      </div>
+
+      <div class="status" id="unlockMsg">Ready.</div>
+
+      <div style="margin-top:12px;">
+        <div class="notes">Tip: position your face inside the HUD ring. Use PIN if camera blocked.</div>
+      </div>
+    </div>
+
+    <div class="panel-right">
+      <div class="video-card">
+        <div class="video-scene">
+          <video id="unlockVideo" autoplay playsinline muted></video>
+          <canvas id="hudCanvas" class="overlay"></canvas>
+
+          <!-- hologram messages -->
+          <div id="holo" class="holo hidden">
+            <div id="holoText" class="holo-text">SCANNING...</div>
+            <div id="holoSub" class="holo-sub">Analyzing biometric vectors</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="thumbs" id="thumbList" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="cyber-footer">
+  <div class="marquee">SECURE • OFFLINE • ENCRYPTED • LOCAL</div>
+</footer>
+
+<script>window.pageType = "unlock";</script>
+<script src="/static/js/mobile_unlock.js"></script>
+<!-- ✅ Face API FIRST -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<!-- Your scripts AFTER -->
+<script src="/static/js/face.js"></script>
+</body>
+</html>

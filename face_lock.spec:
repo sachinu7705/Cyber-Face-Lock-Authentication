@@ -1,0 +1,34 @@
+# face_lock.spec
+block_cipher = None
+
+a = Analysis(
+    ['web_app.py'],
+    pathex=['.'],
+    hiddenimports=[
+        'cv2', 
+        'face_recognition', 
+        'numpy', 
+        'werkzeug', 
+        'email', 
+        'flask_mail'
+    ],
+    datas=[
+        ('templates/*', 'templates'),
+        ('static/*', 'static'),
+        ('static/**/*', 'static'),
+    ],
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    name='FaceLockApp',
+    debug=False,
+    strip=False,
+    upx=False,
+    console=False,  # ❌ no terminal popup
+)

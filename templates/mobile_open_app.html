@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unlock App</title>
+
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <link rel="stylesheet" href="/static/css/mobile_open_app.css">
+</head>
+
+<body class="cyber-shell">
+
+<header class="topbar">
+    <button class="back-btn" onclick="history.back()">⟵</button>
+    <div class="title">UNLOCK APP</div>
+</header>
+
+<main class="unlock-wrap">
+
+    <div class="app-info">
+        <img id="appIcon" class="app-icon" src="">
+        <div id="appName" class="app-name"></div>
+    </div>
+
+    <div class="camera-box">
+
+        <!-- SCAN RING + LINE -->
+        <div class="scan-overlay">
+            <div class="scan-ring"></div>
+            <div class="scan-line"></div>
+        </div>
+
+        <video id="camera" autoplay playsinline></video>
+
+        <button id="scanBtn" class="scan-btn">SCAN FACE</button>
+    </div>
+
+
+    <button id="usePinBtn" class="pin-btn">Use PIN Instead</button>
+
+</main>
+
+<!-- PIN MODAL -->
+<div id="pinModal" class="pin-modal hidden">
+    <div class="pin-box">
+        <div class="pin-title">Enter PIN</div>
+        <input type="password" id="pinInput" maxlength="6" class="pin-input">
+        <button id="pinConfirm" class="pin-confirm">Unlock</button>
+    </div>
+</div>
+
+<!-- SYSTEM UNLOCK POPUP -->
+<div id="sysUnlockPopup" class="sys-unlock hidden">
+    <div class="sys-box">
+        <img id="sysPopIcon" class="sys-icon" src="">
+        <div id="sysPopName" class="sys-name"></div>
+        <div class="sys-msg">Unlocked Successfully</div>
+    </div>
+</div>
+
+<script src="/static/js/open_app.js"></script>
+
+</body>
+</html>

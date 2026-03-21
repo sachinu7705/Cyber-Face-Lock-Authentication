@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cyber Lock — Home</title>
+
+  <link rel="stylesheet" href="/static/css/mobile_index.css">
+</head>
+<body class="cyber-shell">
+
+  <!-- BOOT SCREEN -->
+  <div id="bootScreen" class="boot-screen">
+    <div class="boot-center">
+      <svg class="boot-logo" viewBox="0 0 120 120" aria-hidden>
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0" stop-color="#00e6ff"/>
+            <stop offset="1" stop-color="#ff2b2b"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="44" stroke="url(#g1)" stroke-width="4" fill="rgba(255,255,255,0.02)"/>
+        <path d="M36 88 L60 36 L84 88 Z" fill="url(#g1)"/>
+      </svg>
+
+      <div class="boot-title">CYBER LOCK</div>
+      <div class="boot-sub">Initialising secure HUD…</div>
+
+      <div class="boot-progress">
+        <div id="bootBar" class="boot-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKGROUND -->
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden></canvas>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="left">
+      
+      <div class="brand">CYBER LOCK</div>
+    </div>
+    <div class="right">
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">⚡</button>
+      <button id="createPinBtn" class="btn primary neon-btn">Create Pin</button>
+
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="main-grid">
+
+    <!-- LEFT PANEL -->
+    <section class="panel-left">
+      <div class="card welcome-card">
+        <div class="welcome-hdr">
+          <div class="greet">Welcome,</div>
+          <div id="userName" class="user">Guest</div>
+        </div>
+
+        <!-- HUD PREVIEW -->
+        <div class="hud-preview">
+          <div class="hud-ring neon-ring" id="neonRing">
+            <div class="hud-core">
+              <svg viewBox="0 0 100 100" class="face-icon" aria-hidden>
+                <circle cx="50" cy="50" r="22" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="30" y="62" width="40" height="6" rx="3" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+          <div class="hud-text" id="hudText">Face Enrollment & Unlock</div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="btn-row">
+          <button id="enrollBtn" class="btn primary neon-btn">Enroll Face</button>
+          <button id="unlockBtn" class="btn accent neon-btn">Unlock</button>
+          <button onclick="window.location.href='/reset'" class="btn accent neon-btn">Reset PIN</button>
+
+        </div>
+
+        <div class="small-notes">
+          <div>Face Recognition Authentication</div>
+          <div>Real-Time Facial Detection And Verification</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <section class="panel-right">
+      <div class="card status-card">
+        <div class="card-title">System Panel</div>
+
+        <div class="status-list">
+          <div class="status-item"><span class="dot ok"></span> Camera: <span id="camStatus">Idle</span></div>
+          <div class="status-item"><span class="dot ok"></span> Model: <span id="modelStatus">Loaded</span></div>
+          <div class="status-item"><span class="dot warn"></span> Network: <span id="netStatus">Local</span></div>
+        </div>
+
+        <!-- SETTINGS ONLY, NO MENU BUTTON -->
+        <div class="control-row">
+          <button id="bootAgainBtn" class="btn-outline">Re-run Boot</button>
+        </div>
+        
+
+      </div>
+
+      <div class="card graph-card">
+        <div class="card-title">Recent Activity</div>
+        <div class="activity" id="activityLog">
+          <div class="act">No recent activity</div>
+          
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="left">© 2025 CYBER LOCK</div>
+    <div class="right">Face • PIN • Local</div>
+  </footer>
+
+  <script>window.pageType = "index";</script>
+  <script src="/static/js/mobile_index.js"></script>
+
+<div id="createPinPopup" class="pin-popup hidden">
+  <div class="pin-popup-box">
+      <div class="pin-popup-title">Create New Password</div>
+
+      <input id="newPin" class="popup-input" type="password" placeholder="Enter new PIN">
+      <input id="confirmPin" class="popup-input" type="password" placeholder="Confirm PIN">
+
+      <div id="pinError" class="error-text hidden">PINs do not match</div>
+
+      <button id="savePinBtn" class="cyber-btn">Save Password</button>
+  </div>
+</div>
+
+<div id="resetPinPopup" class="pin-popup hidden">
+  <div class="pin-popup-box">
+      <div class="pin-popup-title">Reset Password</div>
+
+      <input id="resetPin" class="popup-input" type="password" placeholder="Enter new PIN">
+      <input id="resetPin2" class="popup-input" type="password" placeholder="Confirm new PIN">
+
+      <div id="resetError" class="error-text hidden">PIN mismatch</div>
+
+      <button id="resetSaveBtn" class="cyber-btn">Reset Password</button>
+  </div>
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+# 🔐 Secrets & configs
+.env
+*.pem
+
+# 🐍 Python
+venv/
+__pycache__/
+*.pyc
+
+# 🗄️ Database / model files
+*.db
+*.pkl
+
+# 📁 Build & logs
+build/
+logs/
+
+# 🤖 ML / face data
+models/
+known_faces/
+
+# 🔒 App data
+accounts.json
+pin.json
+pin.txt
+locked_apps.json
+lock_apps.json
+
+# 📦 Packaging
+face-lock-deb/
+static/models/
+# Node / JS (for face-api future)
+node_modules/
+
+# OS junk
+*.log
