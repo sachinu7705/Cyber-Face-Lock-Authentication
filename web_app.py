@@ -20,7 +20,7 @@ import subprocess
 import shlex
 
 # FORCE LOCAL MODE (no Docker / no cloud)
-IS_CLOUD = False
+IS_CLOUD = os.environ.get("RENDER") == "true"
 
 # Import face libraries (needed for your app)
 import cv2
@@ -99,10 +99,15 @@ if not IS_CLOUD:
 # ------------------------------
 # Load DLIB models
 # ------------------------------
-detector = dlib.get_frontal_face_detector()
-sp = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
-facerec = dlib.face_recognition_model_v1("models/dlib_face_recognition_resnet_model_v1.dat")
-# ------------------------------
+if not IS_CLOUD:
+    detector = dlib.get_frontal_face_detector()
+    sp = dlib.shape_predictor("models/shape_predictor_68_face_landmarks.dat")
+    facerec = dlib.face_recognition_model_v1("models/dlib_face_recognition_resnet_model_v1.dat")
+else:
+    detector = None
+    sp = None
+    facerec = None
+
 # Locked apps database (JSON)
 # ------------------------------
 APPS_DB = "locked_apps.json"
@@ -731,23 +736,7 @@ def verify_otp():
     # check OTP
     return {"success": True}
 
-@app.route("/api/verify_pin", methods=["POST"])
-def api_verify_pin():
-    data = request.get_json()
 
-    email = data.get("email", "").strip().lower()
-    pin = data.get("pin")
-
-    with open("pin.json", "r") as f:
-        db = json.load(f)
-
-    if email not in db.get("emails", []):
-        return jsonify({"status": "error", "msg": "Email not registered"}), 400
-
-    if db.get("pin") == pin:
-        return jsonify({"status": "ok"})
-
-    return jsonify({"status": "error", "msg": "Invalid PIN"}), 400
 # ---------------------- EMAIL PASSWORD RESET ----------------------
 
 
@@ -968,6 +957,8 @@ def list_installed_apps():
 @app.route("/api/unlock_from_camera", methods=["POST"])
 def api_unlock_from_camera():
 
+    if IS_CLOUD:
+        return jsonify({"status": "error", "msg": "Face recognition disabled on cloud"})
 
     data_url = request.form.get("image")
     if not data_url:
@@ -1038,6 +1029,10 @@ def api_get_apps(user):
 # 3. Face unlock for opening an app
 @app.route("/api/open_app_face", methods=["POST"])
 def api_open_app_face():
+
+    if IS_CLOUD:
+        return jsonify({"status": "error", "msg": "Face recognition disabled on cloud"})
+
     appname = request.form.get("appname")
     data_url = request.form.get("image")
 
@@ -1364,7 +1359,8 @@ ENROLLED_FACE_PATH = "data/enrolled_user.jpg"
 
 @app.route('/api/verify-face', methods=['POST'])
 def verify_face():
-
+    if IS_CLOUD:
+        return jsonify({"status": "error", "msg": "Face recognition disabled on cloud"})
     data = request.json
     image_data = data.get('image')
     
@@ -1396,24 +1392,36 @@ def verify_face():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+
 # Add this to your Python backend
 # In a real app, '1234' would be retrieved from your database
 STORED_PIN = "1234" 
-@app.route('/api/verify-pin', methods=['POST'])
+@app.route("/api/verify-pin", methods=['POST'])
 def verify_pin():
-    data = request.json
-    email = data.get("email", "").strip().lower()
-    user_input_pin = str(data.get('pin'))
+    data = request.get_json() or {}
+    user_input_pin = str(data.get('pin', '')).strip()
 
-    with open("pin.json", "r") as f:
-        db = json.load(f)
+    if not user_input_pin:
+        return jsonify({"status": "fail", "message": "No PIN entered"})
 
+    try:
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+    except:
+        return jsonify({"status": "fail", "message": "PIN database error"})
+
+    # ✅ OPTION 1: GLOBAL PIN (recommended)
+    if user_input_pin == str(db.get("pin")):
+        return jsonify({"status": "success"})
+
+    # ✅ OPTION 2: MULTI-USER PIN (fallback)
     for user in db.get("users", []):
-        if user.get("email") == email and user.get("pin") == user_input_pin:
+        if str(user.get("pin")) == user_input_pin:
             return jsonify({"status": "success"})
 
     return jsonify({"status": "fail", "message": "Incorrect PIN"})
- 
+
 @app.route("/api/request_reset", methods=["POST"])
 def request_reset():
     data = request.get_json() or {}
@@ -1519,19 +1527,11 @@ def save_face():
     save_faces(db)
 
     return jsonify({"status": "ok", "msg": "Face saved!"})
+
 # HTTPS SERVER
 # ------------------------------
+import os
+
 if __name__ == "__main__":
-    import os
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    port = int(os.environ.get("PORT", 5000))
-
-    ssl_context = (
-        os.path.join(BASE_DIR, "cert/10.190.1.186.pem"),
-        os.path.join(BASE_DIR, "cert/10.190.1.186-key.pem")
-    )
-
-    print("🔐 HTTPS running at: https://10.190.1.186:5000/mobile")
-
-    app.run(host="0.0.0.0", port=5000, debug=True, ssl_context=ssl_context)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

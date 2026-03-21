@@ -1,82 +1,136 @@
 # 🔐 Face Lock Authentication System
 
-A secure **Face Recognition-based Authentication System** built with Python, Flask, and OpenCV.
-This project demonstrates how biometric security can be used to protect applications and sensitive data.
+> A modern **Face Recognition Authentication System** built with Python, Flask, OpenCV, and dlib — replacing traditional passwords with secure biometric access.
 
 ---
 
-## 🚀 Features
+## ✨ Highlights
 
-* 🎯 Face Detection & Recognition
-* 🔒 App Lock System
-* 📧 Email-based PIN Reset (optional)
-* 🧠 Smart Authentication Flow
-* 🌐 Web-based Interface (Flask)
+* 🔓 Passwordless Authentication (Face Unlock)
+* 📸 Real-time Face Detection & Recognition
+* 🔐 Secure Web Interface (HTTPS Supported)
+* 👤 User Enrollment System
+* 🔑 PIN Backup Authentication
+* 🌐 Mobile-Friendly UI
 
 ---
 
-## 📥 Download Project
+## 📦 Tech Stack
 
-You can download this repository:
+* Python 3
+* Flask
+* OpenCV
+* dlib
+* face_recognition
 
-### Option 1: Clone using Git
+---
+
+## 🚀 Quick Start (Best Method)
+
+### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/your-username/Face-Lock-Authentication.git
+git clone https://github.com/sachinu7705/Face-Lock-Authentication.git
 cd Face-Lock-Authentication
 ```
 
-### Option 2: Direct Download
-
-* Click **Code → Download ZIP**
-* Extract the ZIP file
-
 ---
 
-## ⚙️ Installation
-
-### 1. Create Virtual Environment
+### 2️⃣ Setup Virtual Environment
 
 ```bash
-python -m venv venv
-source venv/bin/activate   # Linux / Kali
+python3 -m venv venv
+```
+
+Activate:
+
+**Linux / Kali**
+
+```bash
+source venv/bin/activate
+```
+
+**Windows**
+
+```bash
+venv\Scripts\activate
 ```
 
 ---
 
-### 2. Install Requirements
+### 3️⃣ Install Dependencies
 
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-If requirements.txt is missing:
+---
+
+### 4️⃣ Setup Models (Auto Download)
 
 ```bash
-pip install flask opencv-python face_recognition numpy pillow
+python setup.py
+```
+
+✔ Installs dependencies
+✔ Downloads required AI models
+
+---
+
+## ▶️ Run the Application
+
+### Recommended
+
+```bash
+python run.py
 ```
 
 ---
 
-## ▶️ Run the Project
+### Alternative
 
 ```bash
 python web_app.py
 ```
 
-Then open your browser:
+---
+
+## 🌐 Access the Application
+
+Open in browser:
 
 ```
-http://127.0.0.1:5000
+https://localhost:5000/mobile
+```
+
+Or:
+
+```
+https://<your-ip>:5000/mobile
 ```
 
 ---
 
-## 🔐 Access & Usage
+## ⚡ One-Command Setup (Linux / Kali)
 
-* This project is intended for **educational and demonstration purposes only**
-* Users are allowed **read-only access to the code**
-* Do NOT use this project for unauthorized surveillance or misuse
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+---
+
+## 🧹 Reset / Fix Installation
+
+If something breaks:
+
+```bash
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ---
 
@@ -84,35 +138,46 @@ http://127.0.0.1:5000
 
 ```
 Face-Lock-Authentication/
-│── web_app.py
-│── templates/
-│── static/
-│── requirements.txt
-│── README.md
+│── web_app.py          # Main Flask app
+│── run.py              # Quick start runner
+│── setup.py            # Auto setup script
+│── setup.sh            # Linux setup script
+│── requirements.txt    # Dependencies
+│── models/             # Face recognition models
+│── static/             # CSS/JS
+│── templates/          # HTML files
+│── face_lock.db        # Database
 ```
 
 ---
 
 ## ⚠️ Important Notes
 
-* Do NOT upload:
-
-  * `.env`
-  * `config.ini`
-  * datasets / face images
-  * `venv/`
-
-* Use `.gitignore` to protect sensitive files
+* First run may take time (model download)
+* Webcam is required
+* Use HTTPS for secure access
 
 ---
 
-## 🛡️ Security Awareness
+## 🚫 .gitignore (Recommended)
 
-This project highlights:
+```
+venv/
+models/
+__pycache__/
+*.dat
+*.pkl
+*.db
+```
 
-* Why biometric systems must be secured
-* Risks of poor authentication systems
-* Importance of protecting user data
+---
+
+## 🔮 Future Enhancements
+
+* 📱 Mobile App Integration
+* ☁️ Cloud Authentication
+* 🧠 Liveness Detection (Anti-spoofing)
+* 🔐 Multi-Factor Authentication
 
 ---
 
@@ -122,16 +187,18 @@ This project highlights:
 
 ---
 
-## 📜 License
+## ⭐ Support
 
-This project is for **educational use only**.
-Feel free to explore and learn from it.
+If you like this project:
+
+⭐ Star the repository
+🍴 Fork it
+📢 Share with others
 
 ---
-# Face-Lock-Authentication
-# Face-Lock-Authentication-
-# Face-Lock-Authentication-
-# Face-Lock-Authentication-
-# Face-Lock-Authentication-
-# Face-Lock-Authentication
-# Face-Lock-Authentication
+
+## 📜 License
+
+This project is open-source and available under the MIT License.
+
+---
