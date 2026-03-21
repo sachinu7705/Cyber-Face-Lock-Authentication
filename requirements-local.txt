@@ -1,0 +1,3 @@
+dlib
+face-recognition
+opencv-python

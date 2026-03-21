@@ -1528,6 +1528,7 @@ def save_face():
 
     return jsonify({"status": "ok", "msg": "Face saved!"})
 
+
 # HTTPS SERVER
 # ------------------------------
 import os
