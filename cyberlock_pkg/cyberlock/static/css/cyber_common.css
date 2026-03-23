@@ -1,0 +1,989 @@
+/* =========================================================
+   CYBER COMMON — Black-Purple Cyberpunk UI
+   Used by:
+   - Manage Users
+   - Delete User
+   - View Users
+   - Register Email
+   ========================================================= */
+
+:root {
+    --bg: #050109;
+    --panel: #0b0414;
+    --panel-border: rgba(183, 0, 255, 0.16);
+    --text: #e9d9ff;
+    --sub: #8f6bbf;
+
+    --accent: #b300ff;
+    --accent-glow: 0 0 14px rgba(166, 0, 255, 0.7);
+
+    --danger: #ff2b7b;
+    --danger-glow: 0 0 12px rgba(255, 45, 118, 0.6);
+
+    --radius: 14px;
+    --mono: "Courier New", monospace;
+}
+
+/* RESET */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: radial-gradient(circle at 20% 20%, #110017 0%, #050109 60%, #020005 100%);
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+}
+
+/* GLOBAL SHELL */
+.cyber-shell {
+    padding: 20px;
+}
+
+/* HEADER */
+.cyber-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.back {
+    background: transparent;
+    border: 1px solid rgba(183, 0, 255, 0.25);
+    color: var(--accent);
+    padding: 8px 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: var(--mono);
+    box-shadow: var(--accent-glow);
+}
+
+.back:hover {
+    transform: translateY(-2px);
+}
+
+.header-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.tagline {
+    font-size: 13px;
+    color: var(--sub);
+    letter-spacing: 1px;
+}
+
+/* LIST / ROWS */
+.list-container {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--sub);
+}
+
+/* USER ROW */
+.user-item,
+.delete-item {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.25s;
+}
+
+.user-item:hover,
+.delete-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--accent-glow);
+}
+
+/* USER NAME */
+.user-name {
+    font-size: 17px;
+    letter-spacing: 1px;
+}
+
+/* DELETE BUTTON */
+.del-btn {
+    background: var(--danger);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: var(--danger-glow);
+}
+
+.del-btn:hover {
+    background: #ff4c98;
+    transform: translateY(-2px);
+}
+
+/* FORM (REGISTER EMAIL) */
+.form-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--accent-glow);
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.lbl {
+    font-size: 13px;
+    color: var(--sub);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(183, 0, 255,0.25);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.input:focus {
+    outline: none;
+    box-shadow: var(--accent-glow);
+}
+
+/* BUTTON */
+.cyber-btn {
+    background: rgba(150, 80, 255, 0.4);
+    border: 1px solid rgba(170, 120, 255, 0.4);
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #e8d9ff;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    width: fit-content;       /* 🔥 button no longer full width */
+    min-width: 120px;
+    text-align: center;
+
+    cursor: pointer;
+    transition: 0.25s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 8px rgba(150, 80, 255, 0.25);
+}
+
+.cyber-btn:hover {
+    background: rgba(180, 130, 255, 0.6);
+    border-color: rgba(210, 160, 255, 0.6);
+    transform: translateY(-2px) scale(1.03);    /* 🔥 Modern float */
+    box-shadow: 0 0 14px rgba(190, 120, 255, 0.6);
+}
+
+
+/* STATUS TEXT */
+.status {
+    margin-top: 10px;
+    color: var(--sub);
+    font-family: var(--mono);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* MOBILE FRIENDLY */
+@media (max-width: 500px) {
+    .app-title { font-size: 20px; }
+    .tagline { font-size: 12px; }
+    .user-name { font-size: 15px; }
+}
+/* OTP Style */
+.otp-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 15px 0 22px;
+}
+
+.otp-box {
+    width: 42px;
+    height: 48px;
+    font-size: 22px;
+    text-align: center;
+
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+
+    backdrop-filter: blur(10px);
+    color: #fff;
+
+    outline: none;
+    transition: 0.2s;
+}
+
+.otp-box:focus {
+    border-color: rgba(180, 130, 255, 0.5);
+    transform: scale(1.08);
+    box-shadow: 0 0 10px rgba(180, 130, 255, 0.3);
+}
+/* SUCCESS ANIMATION */
+.success-wrapper {
+    text-align: center;
+    margin-top: 40px;
+    animation: fadeIn 0.8s ease forwards;
+}
+
+.success-check {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    border: 4px solid #8f6bff;
+    position: relative;
+    animation: popIn 0.4s ease forwards;
+}
+
+.success-check::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    top: 10px;
+    width: 22px;
+    height: 45px;
+    border-right: 4px solid #cbb8ff;
+    border-bottom: 4px solid #cbb8ff;
+    transform: rotate(45deg);
+    opacity: 0;
+    animation: drawCheck 0.45s ease 0.4s forwards;
+}
+
+.success-text {
+    font-size: 20px;
+    color: #eaddff;
+    margin-top: 10px;
+    opacity: 0;
+    animation: fadeIn 1s ease 0.6s forwards;
+}
+
+/* Glow pulse effect */
+.success-wrapper {
+    animation: fadeIn 0.4s ease forwards, pulseGlow 2s infinite 1s;
+}
+
+@keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes drawCheck {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0px rgba(160, 120, 255, 0.4); }
+    50% { box-shadow: 0 0 15px rgba(180, 150, 255, 0.7); }
+    100% { box-shadow: 0 0 0px rgba(160, 120, 255, 0.4); }
+}
+/* WRONG OTP SHAKE */
+.shake {
+    animation: shakeAnim 0.35s ease;
+}
+
+@keyframes shakeAnim {
+    0% { transform: translateX(0px); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+    100% { transform: translateX(0px); }
+}
+
+.otp-error {
+    border-color: #ff5d8a !important;
+    box-shadow: 0 0 8px #ff5d8a88 !important;
+}
+.resend-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.resend-enabled {
+    opacity: 1;
+    pointer-events: auto;
+}
+.email-box {
+    padding: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    font-size: 18px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    color: #e8dfff;
+    text-align: center;
+    box-shadow: 0 0 10px #8b00ff40;
+}
+.danger-btn {
+    background: rgba(255, 80, 120, 0.35);
+    border: 1px solid rgba(255, 120, 150, 0.45);
+    padding: 10px 14px;
+    width: fit-content;
+    min-width: 120px;
+
+    border-radius: 10px;
+    color: #ffe7ee;
+    transition: 0.25s ease;
+    box-shadow: 0 0 8px rgba(255, 80, 120, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.danger-btn:hover {
+    background: rgba(255, 90, 140, 0.45);
+    border-color: rgba(255, 150, 170, 0.6);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 0 14px rgba(255, 100, 140, 0.6);
+}
+
+/* Popup Background */
+#confirmPopup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+    z-index: 999;
+}
+
+.popup-hidden {
+    display: none !important;
+}
+
+/* Popup Card */
+.popup-card {
+    background: rgba(30, 0, 50, 0.4);
+    border: 1px solid rgba(180, 100, 255, 0.3);
+    padding: 20px;
+    border-radius: 16px;
+    width: 82%;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 0 20px rgba(140, 70, 255, 0.3);
+    animation: popupIn 0.3s ease;
+}
+
+@keyframes popupIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.popup-title {
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    color: #e9d8ff;
+    margin-bottom: 10px;
+}
+
+.popup-msg {
+    text-align: center;
+    color: #d4caff;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.popup-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+    color: #fff;
+    transition: 0.2s;
+}
+
+/* Cancel Button */
+.popup-btn.cancel {
+    background: rgba(160, 120, 255, 0.3);
+}
+
+.popup-btn.cancel:hover {
+    background: rgba(160, 120, 255, 0.5);
+}
+
+/* Delete Button */
+.popup-btn.delete {
+    background: #ff4d6b;
+}
+
+.popup-btn.delete:hover {
+    background: #ff6f88;
+}
+/* Row layout */
+.email-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+
+    padding: 14px;
+    margin-bottom: 18px;
+
+    animation: bgGlow 4s infinite alternate ease-in-out;
+}
+
+.email-left {
+    flex: 1;
+    margin-right: 12px;
+}
+
+.email-right {
+    display: flex;
+    align-items: center;
+}
+
+
+.email-text {
+    font-size: 18px;
+    color: #e8dffc;
+    font-weight: 500;
+}
+
+.small-input {
+    padding: 10px !important;
+    font-size: 14px !important;
+}
+
+/* Smaller button style */
+.small-btn {
+    padding: 6px 14px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+}
+
+/* Animated background glow */
+@keyframes bgGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(150, 80, 255, 0.25);
+        border-color: rgba(140, 70, 255, 0.18);
+    }
+    100% {
+        box-shadow: 0 0 18px rgba(200, 150, 255, 0.45);
+        border-color: rgba(200, 150, 255, 0.35);
+    }
+}
+/* Shake Anim */
+.shake {
+    animation: shakeAnim 0.35s ease;
+}
+
+@keyframes shakeAnim {
+    0% { transform: translateX(0px); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+    100% { transform: translateX(0px); }
+}
+
+/* Red Error Glow */
+.pin-error {
+    border-color: #ff5d8a !important;
+    box-shadow: 0 0 8px #ff5d8a88 !important;
+}
+.resend-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.resend-enabled {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* Strength Bar Container */
+.strength-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+/* Strength Fill */
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    background: red;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+/* Strength Text */
+.strength-label {
+    margin-top: 6px;
+    color: #d7c6ff;
+    font-size: 13px;
+    text-shadow: 0 0 4px rgba(150, 100, 255, 0.4);
+}
+.otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 10px 0 20px 0;
+}
+
+.otp-box {
+    width: 42px;
+    height: 48px;
+    font-size: 22px;
+    text-align: center;
+    border-radius: 10px;
+
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    outline: none;
+
+    transition: 0.2s;
+}
+
+.otp-box:focus {
+    border-color: #b97aff;
+    box-shadow: 0 0 10px #b97affaa;
+}
+.pin-input {
+    letter-spacing: 8px;
+    font-size: 22px !important;
+    text-align: center;
+}
+
+
+/* Popup background blur */
+.pin-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+/* Hidden initially */
+.hidden {
+    display: none !important;
+}
+
+/* Popup box */
+.pin-popup-box {
+    width: 85%;
+    max-width: 330px;
+    padding: 20px;
+    border-radius: 18px;
+
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 0 25px rgba(180,120,255,0.35);
+
+    animation: popupIn 0.35s ease;
+}
+
+.pin-popup-title {
+    font-size: 20px;
+    color: #e7d9ff;
+    text-align: center;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
+
+/* popup animation */
+@keyframes popupIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* select_apps.html
+
+/* Vertical stacked list instead of grid */
+.apps-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Full-width app card */
+.app-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(180,120,255,0.15);
+    border-radius: 14px;
+    padding: 14px 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-shadow: 0 0 12px rgba(150,80,255,0.15);
+    transition: 0.2s;
+}
+
+.app-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 16px rgba(200,100,255,0.25);
+}
+
+/* Icon + App Name */
+.app-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.app-icon {
+    font-size: 28px;
+}
+
+.app-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: #f2e8ff;
+}
+
+/* Right side: checkbox + edit */
+.app-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-checkbox {
+    width: 20px;
+    height: 20px;
+}
+
+.app-edit {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* CATEGORY TITLE */
+.category-title {
+    margin-top: 22px;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #cbb5ff;
+    opacity: 0.9;
+}
+
+/* LOCKED GLOW EFFECT */
+.locked-glow {
+    box-shadow: 0 0 12px rgba(150, 80, 255, 0.4);
+    animation: glowPulse 2.6s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 8px rgba(180, 80, 255, 0.2); }
+    50% { box-shadow: 0 0 18px rgba(210, 120, 255, 0.45); }
+    100% { box-shadow: 0 0 8px rgba(180, 80, 255, 0.2); }
+}
+
+.search-box {
+    margin: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.search-input {
+    width: 90%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #8b00ff55;
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    backdrop-filter: blur(6px);
+    transition: 0.3s;
+}
+
+.search-input:focus {
+    border-color: #b84dffaa;
+    box-shadow: 0 0 10px #b84dffaa;
+}
+.app-card.selected {
+    border: 1px solid #c46aff;
+    box-shadow: none;
+    background: rgba(140, 0, 255, 0.14);
+    transform: scale(1.02);
+}
+
+.app-card {
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+
+/* Simple lock indicator (NO neon, NO glow) */
+.lock-indicator {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    opacity: 0;
+    transition: 0.2s;
+}
+
+/* When selected → show lock icon only */
+.app-card.selected .lock-indicator {
+    opacity: 1;
+}
+
+.app-card.selected .lock-indicator::after {
+    content: "🔒";  /* Simple lock */
+}
+/* ===== Register Email Page Fix ===== */
+
+.register-email-box {
+    margin-top: 50px !important;
+    padding: 30px !important;
+}
+
+.register-email-box .input-group {
+    margin-bottom: 25px !important; /* Increased spacing */
+}
+
+.register-email-box input {
+    margin-bottom: 18px !important; /* More breathing room */
+}
+
+.register-email-box .btn {
+    margin-top: 12px !important;  /* Space between input and button */
+    padding: 12px 18px !important;
+    font-size: 15px !important;
+}
+
+.register-email-title {
+    margin-bottom: 25px !important;
+}
+#verifyBtn {
+    display: block;
+    margin: 20px auto 0 auto !important; /* Centers button */
+    text-align: center;
+}
+/* Center whole form */
+.email-label,
+.email-input,
+.email-btn {
+    width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+/* Label */
+.email-label {
+    color: #d4befe;
+    font-size: 14px;
+    margin-bottom: 6px;
+    margin-top: 10px;
+    opacity: 0.85;
+}
+
+/* Input (clean, no container) */
+.email-input {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(170, 0, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-size: 15px;
+    outline: none;
+    transition: 0.25s ease;
+}
+
+.email-input:focus {
+    border-color: #d500ff;
+    box-shadow: 0 0 18px rgba(255, 0, 255, 0.55);
+}
+
+/* Button (neon) */
+.email-btn {
+    margin-top: 18px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(200, 0, 255, 0.5);
+    background: rgba(170, 0, 255, 0.35);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.25s;
+    font-weight: 600;
+}
+
+.email-btn:hover {
+    background: rgba(255, 0, 255, 0.5);
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.email-btn:active {
+    transform: scale(0.97);
+}
+.back-btn {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    
+    background: linear-gradient(180deg, rgba(0, 255, 255, 0.18), rgba(176, 66, 255, 0.18));
+    color: #e8f1ff;
+    
+    cursor: pointer;
+    transition: 0.18s ease-in-out;
+    box-shadow: 0 0 10px rgba(0,255,255,0.25),
+                0 0 14px rgba(176,66,255,0.2);
+}
+
+/* Hover Glow */
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 16px rgba(0,255,255,0.55),
+                0 0 24px rgba(176,66,255,0.45);
+}
+
+/* Click animation */
+.back-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 8px rgba(0,255,255,0.3),
+                0 0 12px rgba(176,66,255,0.3);
+}
+/* ---- SYSTEM UNLOCK POPUP ---- */
+
+.sys-unlock {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.45);
+    z-index: 99999;
+}
+
+.sys-unlock.hidden {
+    display: none;
+}
+
+.sys-box {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(0,255,255,0.3);
+    padding: 20px 26px;
+    border-radius: 14px;
+    text-align:center;
+    box-shadow: 
+        0 0 16px rgba(0,255,255,0.4),
+        0 0 32px rgba(176,66,255,0.3);
+    animation: popIn 0.25s ease-out;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.7); opacity:0; }
+    100% { transform: scale(1); opacity:1; }
+}
+
+.sys-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 
+        0 0 12px rgba(0,255,255,0.4),
+        0 0 18px rgba(176,66,255,0.25);
+}
+
+.sys-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #e8faff;
+}
+
+.sys-msg {
+    font-size: 14px;
+    color: #9ad7ff;
+    letter-spacing: 0.5px;
+}
+.app-icon-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    margin-right: 12px;
+    box-shadow: 0 0 12px rgba(176,66,255,0.3);
+    background: rgba(255,255,255,0.15);
+    object-fit: contain;
+}
+.lock-status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 242, 255, 0.1);
+    border-radius: 50%;
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+    transition: 0.3s;
+}
+
+.app-card:hover .lock-status-icon {
+    background: rgba(0, 242, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+    transform: scale(1.1);
+}

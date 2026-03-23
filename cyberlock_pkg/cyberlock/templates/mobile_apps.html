@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Installed Apps</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <link rel="stylesheet" href="/static/css/mobile_apps.css">
+    <style>
+        /* Enhanced Face Scan Popup Styles */
+        .face-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .face-modal {
+            background: linear-gradient(135deg, rgba(10, 12, 15, 0.95), rgba(0, 0, 0, 0.95));
+            border: 2px solid #ff2b2b;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 43, 43, 0.3);
+            animation: slideUp 0.4s ease;
+        }
+        
+        .face-modal .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff2b2b, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
+        .camera-container {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 43, 43, 0.3);
+        }
+        
+        #webcam {
+            width: 100%;
+            height: auto;
+            transform: scaleX(-1);
+            display: block;
+        }
+        
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff2b2b, #ff6b6b, #ff2b2b, transparent);
+            animation: scanMove 2s linear infinite;
+            box-shadow: 0 0 10px #ff2b2b;
+        }
+        
+        @keyframes scanMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        .status-text {
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            color: #00e6ff;
+            text-align: center;
+        }
+        
+        /* Fallback Options */
+        .fallback-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 43, 43, 0.3);
+        }
+        
+        .pin-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .pin-input-field {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 43, 43, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 20px;
+            text-align: center;
+            letter-spacing: 4px;
+            font-family: monospace;
+        }
+        
+        .pin-input-field:focus {
+            outline: none;
+            border-color: #ff2b2b;
+            box-shadow: 0 0 10px rgba(255, 43, 43, 0.3);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #ff2b2b, #cc0044);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 43, 43, 0.4);
+        }
+        
+        .btn-secondary {
+            flex: 1;
+            background: transparent;
+            border: 1px solid #333;
+            color: #999;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #ff2b2b;
+            color: #ff2b2b;
+        }
+        
+        .btn-danger {
+            background: transparent;
+            border: 1px solid #ff2b2b;
+            color: #ff2b2b;
+        }
+        
+        .btn-danger:hover {
+            background: rgba(255, 43, 43, 0.1);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10001;
+            animation: particleFloat 1s ease-out forwards;
+        }
+        
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 43, 43, 0.3);
+            animation: pulse 1.5s ease-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="cyberpunk-shell">
+
+<header class="cyber-top">
+    <button class="back-btn" onclick="history.back()">⟵</button>
+    <div>
+        <div class="title">APPS LAUNCHER</div>
+        <div class="subtitle">Installed Applications</div>
+    </div>
+</header>
+
+<main class="page-container">
+
+    <div class="card section-card">
+        <div class="card-title">Installed Apps</div>
+        <div class="muted small">Tap an app to open. Locked apps require Face/PIN unlock.</div>
+
+        <!-- Search box -->
+        <div class="search-box">
+            <input id="appsSearch" type="text" placeholder="Search apps..." class="search-input">
+            <button id="refreshApps" class="refresh-btn">⟳</button>
+        </div>
+
+        <!-- Apps List -->
+        <div id="appsContainer" class="apps-list"></div>
+
+        <div id="appsStatus" class="status-text small"></div>
+    </div>
+    
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+    <a href="/mobile/menu" class="nav-item">Menu</a>
+    <a href="/mobile/apps" class="nav-item active">Reload</a>
+    <a href="/mobile/enroll" class="nav-item">Enroll</a>
+</nav>
+
+<!-- Enhanced Face Scan Overlay -->
+<div id="faceScanOverlay" class="face-overlay" style="display: none;">
+    <div class="face-modal">
+        <div class="card-title">🔐 BIOMETRIC AUTHENTICATION</div>
+        
+        <!-- Camera Container -->
+        <div class="camera-container">
+            <video id="webcam" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div class="scan-line"></div>
+            <div class="pulse-ring"></div>
+        </div>
+        
+        <!-- Status Message -->
+        <div id="scanStatus" class="status-text">📸 Position your face in the frame...</div>
+        
+        <!-- Fallback Options (will be dynamically added) -->
+        <div id="fallbackContainer"></div>
+        
+        <!-- Cancel Button -->
+        <button id="closeScanBtn" class="btn-secondary" style="margin-top: 15px; width: 100%;">✖ CANCEL</button>
+    </div>
+</div>
+
+<script src="/static/js/mobile_apps.js" defer></script>
+</body>
+</html>

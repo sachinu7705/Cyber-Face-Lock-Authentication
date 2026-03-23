@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cyber Lock — Home</title>
+
+  <link rel="stylesheet" href="/static/css/mobile_index.css">
+  <style>
+    /* Additional styles for enhanced features */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .quick-action-btn {
+      background: rgba(255, 43, 43, 0.1);
+      border: 1px solid rgba(255, 43, 43, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .quick-action-btn:hover {
+      background: rgba(255, 43, 43, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(255, 43, 43, 0.3);
+    }
+    
+    .quick-action-icon {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    
+    .quick-action-label {
+      font-size: 11px;
+      color: #9aa0a6;
+    }
+    
+    /* Status Items */
+    .status-list-modern {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .status-item-modern {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border-left: 3px solid #ff2b2b;
+    }
+    
+    .status-label {
+      color: #9aa0a6;
+      font-size: 12px;
+    }
+    
+    .status-value {
+      color: #00e6ff;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+    }
+    
+    .dot.ok {
+      background: #4caf50;
+      box-shadow: 0 0 5px #4caf50;
+    }
+    
+    .dot.warn {
+      background: #ff9800;
+      box-shadow: 0 0 5px #ff9800;
+    }
+    
+    .dot.error {
+      background: #ff2b2b;
+      box-shadow: 0 0 5px #ff2b2b;
+    }
+    
+    /* Control Buttons */
+    .control-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-cyber {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(255, 43, 43, 0.2), rgba(0, 0, 0, 0.5));
+      border: 1px solid rgba(255, 43, 43, 0.3);
+      color: #ff2b2b;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .btn-cyber:hover {
+      background: rgba(255, 43, 43, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 43, 43, 0.3);
+      border-color: rgba(255, 43, 43, 0.6);
+    }
+    
+    /* Tips Card */
+    .tips-card-modern {
+      background: linear-gradient(135deg, rgba(0, 230, 255, 0.05), rgba(255, 43, 43, 0.05));
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 20px;
+      border: 1px solid rgba(0, 230, 255, 0.2);
+    }
+    
+    .tips-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #00e6ff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-list {
+      font-size: 11px;
+      color: #9aa0a6;
+      line-height: 1.8;
+    }
+    
+    .tips-list div {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tips-list div::before {
+      content: '⚡';
+      color: #ff2b2b;
+    }
+    
+    /* User Profile */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, rgba(255, 43, 43, 0.1), rgba(0, 0, 0, 0.3));
+      border-radius: 16px;
+      border: 1px solid rgba(255, 43, 43, 0.2);
+    }
+    
+    .user-avatar-large {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ff2b2b, #ff6b6b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      box-shadow: 0 0 20px rgba(255, 43, 43, 0.3);
+    }
+    
+    .user-info-line {
+      flex: 1;
+    }
+    
+    .user-name-line {
+      font-size: 20px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #fff, #ff2b2b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .user-email-line {
+      font-size: 11px;
+      color: #9aa0a6;
+      margin-top: 4px;
+    }
+    
+    /* PIN Popup Styles */
+    .pin-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    
+    .pin-popup.hidden {
+      display: none;
+    }
+    
+    .pin-popup-box {
+      background: linear-gradient(135deg, #0a0a0a, #030305);
+      border: 2px solid #ff2b2b;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 350px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(255, 43, 43, 0.3);
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .pin-popup-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ff2b2b;
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+    
+    .popup-input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 43, 43, 0.3);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 18px;
+      text-align: center;
+      letter-spacing: 4px;
+      font-family: monospace;
+    }
+    
+    .popup-input:focus {
+      outline: none;
+      border-color: #ff2b2b;
+      box-shadow: 0 0 10px rgba(255, 43, 43, 0.3);
+    }
+    
+    .error-text {
+      color: #ff4444;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    
+    .error-text.hidden {
+      display: none;
+    }
+    
+    .cyber-btn {
+      background: linear-gradient(135deg, #ff2b2b, #cc0044);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 15px;
+      width: 100%;
+      transition: all 0.3s;
+    }
+    
+    .cyber-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(255, 43, 43, 0.4);
+    }
+    
+    .cancel-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #999;
+    }
+    
+    .cancel-btn:hover {
+      border-color: #ff2b2b;
+      color: #ff2b2b;
+    }
+  </style>
+</head>
+<body class="cyber-shell">
+
+  <!-- BOOT SCREEN -->
+  <div id="bootScreen" class="boot-screen">
+    <div class="boot-center">
+      <svg class="boot-logo" viewBox="0 0 120 120" aria-hidden>
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0" stop-color="#00e6ff"/>
+            <stop offset="1" stop-color="#ff2b2b"/>
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r="44" stroke="url(#g1)" stroke-width="4" fill="rgba(255,255,255,0.02)"/>
+        <path d="M36 88 L60 36 L84 88 Z" fill="url(#g1)"/>
+      </svg>
+      <div class="boot-title">CYBER LOCK</div>
+      <div class="boot-sub">Initialising secure HUD…</div>
+      <div class="boot-progress">
+        <div id="bootBar" class="boot-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKGROUND -->
+  <canvas id="bgCanvas" class="bg-canvas" aria-hidden></canvas>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="left">
+      <div class="brand">CYBER LOCK</div>
+    </div>
+    <div class="right">
+      <button id="themeToggle" class="icon-btn" title="Toggle Theme">⚡</button>
+      <button id="createPinBtn" class="btn primary neon-btn" style="display: none;">Create Pin</button>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="main-grid">
+
+    <!-- LEFT PANEL -->
+    <section class="panel-left">
+      <div class="card welcome-card">
+        
+        <!-- User Profile -->
+        <div class="user-profile">
+          <div id="userAvatarLarge" class="user-avatar-large">G</div>
+          <div class="user-info-line">
+            <div class="user-name-line" id="userNameLine">Guest</div>
+            <div class="user-email-line" id="userEmailLine"></div>
+          </div>
+        </div>
+
+        <!-- HUD PREVIEW -->
+        <div class="hud-preview">
+          <div class="hud-ring neon-ring" id="neonRing">
+            <div class="hud-core">
+              <svg viewBox="0 0 100 100" class="face-icon" aria-hidden>
+                <circle cx="50" cy="50" r="22" stroke="currentColor" stroke-width="2" fill="none"/>
+                <rect x="30" y="62" width="40" height="6" rx="3" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
+          <div class="hud-text" id="hudText">Face Enrollment & Unlock</div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="btn-row">
+          <button id="enrollBtn" class="btn primary neon-btn">📸 Enroll Face</button>
+          <button id="unlockBtn" class="btn accent neon-btn">🔓 Unlock</button>
+          <button onclick="window.location.href='/reset'" class="btn accent neon-btn">🔄 Reset PIN</button>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <!-- Apps Launcher - No PIN required -->
+          <div class="quick-action-btn" onclick="window.location.href='/mobile/apps'">
+            <div class="quick-action-icon">📱</div>
+            <div class="quick-action-label">Apps Launcher</div>
+          </div>
+          <!-- Manage Users - PIN required for security -->
+          <div class="quick-action-btn" onclick="requirePinAccess('/mobile/manage-users')">
+            <div class="quick-action-icon">👥</div>
+            <div class="quick-action-label">Manage Users</div>
+          </div>
+        </div>
+
+        <div class="small-notes">
+          <div>🔐 Biometric Authentication</div>
+          <div>⚡ Real-Time Face Detection</div>
+          <div>🛡️ Military-Grade Encryption</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL - Clean Design -->
+    <section class="panel-right">
+      
+      <!-- System Status Card -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(10,12,15,0.8), rgba(0,0,0,0.6)); backdrop-filter: blur(10px);">
+        <div class="card-title" style="font-size: 16px; margin-bottom: 15px;">🖥️ SYSTEM STATUS</div>
+
+        <div class="status-list-modern">
+          <div class="status-item-modern">
+            <span class="status-label"><span class="dot ok"></span> Camera</span>
+            <span class="status-value" id="camStatus">Available</span>
+          </div>
+          <div class="status-item-modern">
+            <span class="status-label"><span class="dot ok"></span> Face Model</span>
+            <span class="status-value" id="modelStatus">Loaded</span>
+          </div>
+          <div class="status-item-modern">
+            <span class="status-label"><span class="dot warn"></span> Network</span>
+            <span class="status-value">Local Secure</span>
+          </div>
+          <div class="status-item-modern">
+            <span class="status-label"><span class="dot" id="faceStatusDot"></span> Face Data</span>
+            <span class="status-value" id="faceDataStatus">Checking...</span>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="control-group">
+          <button id="bootAgainBtn" class="btn-cyber">🔄 REBOOT</button>
+          <button id="refreshStatsBtn" class="btn-cyber">📊 REFRESH</button>
+        </div>
+      </div>
+
+      <!-- Tips Card -->
+      <div class="tips-card-modern">
+        <div class="tips-title">
+          <span>💡</span> CYBER TIPS
+        </div>
+        <div class="tips-list">
+          <div>Good lighting = Better recognition</div>
+          <div>Center face in the HUD ring</div>
+          <div>4-digit PIN backup always ready</div>
+          <div>Enroll multiple angles for accuracy</div>
+          <div>Lock sensitive apps for extra security</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="left">© 2025 CYBER LOCK | v3.0</div>
+    <div class="center" style="font-size: 10px;">🔒 AES-256 • OFFLINE • BIOMETRIC</div>
+    <div class="right">Face • PIN • Local</div>
+  </footer>
+
+  <!-- PIN Access Popup (Only for Manage Users) -->
+  <div id="pinAccessPopup" class="pin-popup hidden">
+    <div class="pin-popup-box">
+      <div class="pin-popup-title">🔐 ADMIN ACCESS</div>
+      <div id="accessMessage" style="color: #9aa0a6; font-size: 12px; margin-bottom: 15px;">Enter system PIN to manage users</div>
+      <input id="accessPin" class="popup-input" type="password" placeholder="••••" maxlength="4">
+      <div id="accessError" class="error-text hidden">Invalid PIN</div>
+      <button id="confirmAccessBtn" class="cyber-btn">VERIFY</button>
+      <button id="cancelAccessBtn" class="cyber-btn cancel-btn" style="margin-top: 10px;">CANCEL</button>
+    </div>
+  </div>
+
+  <script>window.pageType = "index";</script>
+  <script src="/static/js/mobile_index.js"></script>
+
+  <!-- Create PIN Popup -->
+  <div id="createPinPopup" class="pin-popup hidden">
+    <div class="pin-popup-box">
+      <div class="pin-popup-title">Create New PIN</div>
+      <input id="newPin" class="popup-input" type="password" placeholder="Enter 4-digit PIN" maxlength="4">
+      <input id="confirmPin" class="popup-input" type="password" placeholder="Confirm PIN" maxlength="4">
+      <div id="pinError" class="error-text hidden">PINs do not match</div>
+      <button id="savePinBtn" class="cyber-btn">Save Password</button>
+    </div>
+  </div>
+
+  <!-- Reset PIN Popup -->
+  <div id="resetPinPopup" class="pin-popup hidden">
+    <div class="pin-popup-box">
+      <div class="pin-popup-title">Reset Password</div>
+      <input id="resetPin" class="popup-input" type="password" placeholder="Enter new PIN" maxlength="4">
+      <input id="resetPin2" class="popup-input" type="password" placeholder="Confirm new PIN" maxlength="4">
+      <div id="resetError" class="error-text hidden">PIN mismatch</div>
+      <button id="resetSaveBtn" class="cyber-btn">Reset Password</button>
+    </div>
+  </div>
+
+  <script>
+    // PIN Access Control - Only for Manage Users
+    let pendingUrl = null;
+    
+    window.requirePinAccess = function(url) {
+      pendingUrl = url;
+      const popup = document.getElementById("pinAccessPopup");
+      const pinInput = document.getElementById("accessPin");
+      const errorDiv = document.getElementById("accessError");
+      
+      if (popup) {
+        popup.classList.remove("hidden");
+        pinInput.value = "";
+        errorDiv.classList.add("hidden");
+        pinInput.focus();
+      }
+    };
+    
+    // Verify PIN
+    document.getElementById("confirmAccessBtn")?.addEventListener("click", async () => {
+      const pin = document.getElementById("accessPin").value.trim();
+      const errorDiv = document.getElementById("accessError");
+      
+      if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        errorDiv.textContent = "PIN must be exactly 4 digits";
+        errorDiv.classList.remove("hidden");
+        return;
+      }
+      
+      try {
+        const res = await fetch("/api/verify_system_pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: pin })
+        });
+        
+        const data = await res.json();
+        
+        if (data.status === "success") {
+          document.getElementById("pinAccessPopup").classList.add("hidden");
+          if (pendingUrl) {
+            window.location.href = pendingUrl;
+          }
+        } else {
+          errorDiv.textContent = "Invalid PIN. Access denied.";
+          errorDiv.classList.remove("hidden");
+          document.getElementById("accessPin").value = "";
+        }
+      } catch (err) {
+        errorDiv.textContent = "Verification failed. Try again.";
+        errorDiv.classList.remove("hidden");
+      }
+    });
+    
+    // Cancel access
+    document.getElementById("cancelAccessBtn")?.addEventListener("click", () => {
+      document.getElementById("pinAccessPopup").classList.add("hidden");
+      pendingUrl = null;
+    });
+    
+    // Enter key support
+    document.getElementById("accessPin")?.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("confirmAccessBtn").click();
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLock — Reset PIN</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/reset.css">
+    <style>
+        /* PIN input styling */
+        input[type="password"] {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 8px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .pin-error {
+            border-color: #ff4444 !important;
+            animation: shake 0.3s ease;
+        }
+        
+        .pin-success {
+            border-color: #4caf50 !important;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .message {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    
+<!-- THEME TOGGLE BUTTON -->
+<div id="theme-toggle" class="theme-toggle">🌗</div>
+
+
+<div class="wrap">
+    <div class="card">
+
+        <!-- CLOSE BUTTON -->
+        <button id="closeReset" class="close-btn">✕</button>
+
+        <div class="glow-blob"></div>
+
+        <h1>Reset PIN — CyberLock</h1>
+        <p class="lead">Secure reset</p>
+
+        <!-- STEP HEADERS -->
+        <div class="steps">
+            <div class="step" id="stepLabel-1">Email</div>
+            <div class="step" id="stepLabel-2">OTP</div>
+            <div class="step" id="stepLabel-3">New PIN</div>
+        </div>
+
+        <!-- DYNAMIC CONTENT (Email → OTP → New PIN) -->
+        <div id="content"></div>
+
+        <!-- BUTTONS -->
+        <div class="bottom-bar">
+            <button class="btn ghost" id="backBtn" style="display:none">Back</button>
+            <button class="btn" id="nextBtn">Continue</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- JS -->
+<script src="/static/js/reset.js"></script>
+
+</body>
+</html>

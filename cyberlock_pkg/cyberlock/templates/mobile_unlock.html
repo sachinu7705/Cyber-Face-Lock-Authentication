@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Unlock — Cyber HUD</title>
+  <link rel="stylesheet" href="/static/css/cyber_unlock.css">
+  <style>
+    /* Additional styles for PIN input */
+    #unlockPin {
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 8px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    
+    #unlockPin:focus {
+      outline: none;
+      border-color: #ff2b2b;
+      box-shadow: 0 0 15px rgba(255, 43, 43, 0.3);
+    }
+    
+    .pin-error {
+      border-color: #ff4444 !important;
+      animation: shake 0.3s ease;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+  </style>
+</head>
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <a class="back" href="javascript:history.back()">⟵</a>
+  <div>
+    <div class="app-title">CYBER FACE UNLOCK</div>
+    <div class="tagline">Retina HUD • Local Mode</div>
+  </div>
+</header>
+
+<div class="cyber-main">
+  <div class="panel">
+    <div class="panel-left">
+      <label class="lbl">Fallback PIN (4 digits)</label>
+      <input 
+        id="unlockPin" 
+        type="password" 
+        class="in" 
+        placeholder="••••"
+        maxlength="4"
+        pattern="\d{4}"
+        inputmode="numeric"
+        autocomplete="off"
+      >
+
+      <div class="btn-row" style="margin-top:16px;">
+        <button id="startUnlockCam" class="btn btn-danger btn-wide">Start Camera</button>
+        <button id="captureUnlockBtn" class="btn btn-outline btn-wide">Retina Scan</button>
+        <button id="stopUnlockCam" class="btn btn-ghost btn-wide">Stop Camera</button>
+      </div>
+
+      <div class="status" id="unlockMsg">Ready.</div>
+
+      <div style="margin-top:12px;">
+        <div class="notes">Tip: position your face inside the HUD ring. Use 4-digit PIN if camera blocked.</div>
+      </div>
+    </div>
+
+    <div class="panel-right">
+      <div class="video-card">
+        <div class="video-scene">
+          <video id="unlockVideo" autoplay playsinline muted></video>
+          <canvas id="hudCanvas" class="overlay"></canvas>
+
+          <!-- hologram messages -->
+          <div id="holo" class="holo hidden">
+            <div id="holoText" class="holo-text">SCANNING...</div>
+            <div id="holoSub" class="holo-sub">Analyzing biometric vectors</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="thumbs" id="thumbList" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="cyber-footer">
+  <div class="marquee">SECURE • OFFLINE • ENCRYPTED • LOCAL</div>
+</footer>
+
+<script>window.pageType = "unlock";</script>
+<script src="/static/js/mobile_unlock.js"></script>
+</body>
+</html>

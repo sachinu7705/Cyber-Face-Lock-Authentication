@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Change PIN</title>
+
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <script src="/static/js/change_pin.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+  <button onclick="history.back()" class="back">←</button>
+  <div class="header-block">
+      <div class="app-title">CHANGE PIN</div>
+      <div class="tagline">Update your lock PIN</div>
+  </div>
+</header>
+
+<main class="list-container">
+
+    <!-- Enter Old PIN -->
+    <label class="lbl">Enter Old PIN</label>
+    <input type="password" class="input pin-input" id="oldPin" maxlength="4">
+
+    <button class="cyber-btn small-btn" id="checkOldPinBtn" style="margin-top:12px;">
+        Continue
+    </button>
+
+    <div id="status" class="status"></div>
+
+</main>
+
+<!-- POPUP FOR NEW PIN -->
+<div id="pinPopup" class="pin-popup hidden">
+    <div class="pin-popup-box">
+
+        <div class="pin-popup-title">Set New PIN</div>
+
+        <label class="lbl">New 4-digit PIN</label>
+        <input type="password" class="input pin-input" id="modalPin1" maxlength="4">
+
+        <label class="lbl">Confirm PIN</label>
+        <input type="password" class="input pin-input" id="modalPin2" maxlength="4">
+
+        <button class="cyber-btn small-btn" id="modalSavePinBtn">
+            Save PIN
+        </button>
+
+    </div>
+</div>
+
+</body>
+</html>

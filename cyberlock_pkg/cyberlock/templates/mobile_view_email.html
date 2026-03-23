@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Emails - CyberLock</title>
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <style>
+        .popup-hidden {
+            display: none;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .popup-box {
+            background: linear-gradient(135deg, #0a0a0a, #030305);
+            border: 1px solid #ff0055;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.3);
+        }
+        
+        .popup-text {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .popup-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .popup-btn-danger {
+            background: #ff0055;
+            color: white;
+            border: none;
+        }
+        
+        .popup-btn-cancel {
+            background: transparent;
+            color: #999;
+            border: 1px solid #333;
+        }
+        
+        .list-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body class="cyber-shell">
+
+<header class="cyber-top">
+    <button onclick="history.back()" class="back">←</button>
+    <div class="header-block">
+        <div class="app-title">REGISTERED EMAILS</div>
+        <div class="tagline">Authorized email addresses</div>
+    </div>
+</header>
+
+<main class="list-container" id="emailList">
+    <div class="loading">Loading emails...</div>
+</main>
+
+<!-- Confirmation Popup -->
+<div id="confirmPopup" class="popup-overlay popup-hidden">
+    <div class="popup-box">
+        <div class="popup-text" class="popup-text">
+            Remove this email from authorized list?
+        </div>
+        <div class="popup-buttons">
+            <button id="confirmDelete" class="popup-btn popup-btn-danger">DELETE</button>
+            <button id="cancelDelete" class="popup-btn popup-btn-cancel">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/view_email.js"></script>
+</body>
+</html>

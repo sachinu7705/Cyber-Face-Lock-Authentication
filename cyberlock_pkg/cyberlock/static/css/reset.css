@@ -1,0 +1,256 @@
+:root{
+    --bg:#050005;
+    --panel:#15001a;
+    --glass: rgba(255,255,255,0.03);
+    --neon:#b200ff;
+    --accent:#7a00ff;
+    --muted: rgba(255,255,255,0.6);
+    --success:#2ce27a;
+    --danger:#ff5c8a;
+    --shadow:0 10px 40px rgba(57,0,80,0.6), inset 0 0 40px rgba(123,0,255,0.06);
+    font-family: Inter, sans-serif;
+}
+
+body{
+    margin:0;
+    background:
+        radial-gradient(ellipse at center, rgba(80,0,120,0.12) 0%, rgba(0,0,0,0.9) 40%),
+        var(--bg);
+    color:#eee;
+}
+
+.wrap{
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:40px;
+}
+
+.card{
+    width:min(900px,95%);
+    background:linear-gradient(180deg, rgba(30,0,30,0.72), rgba(18,0,18,0.88));
+    padding:30px;
+    border-radius:18px;
+    border:1px solid rgba(180,100,255,0.06);
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+}
+
+.glow-blob{
+    position:absolute;
+    right:-120px;
+    top:-80px;
+    width:420px;
+    height:420px;
+    border-radius:50%;
+    filter:blur(30px);
+    background:radial-gradient(circle at 30% 30%, rgba(178,0,255,0.22), rgba(123,0,255,0.08) 35%, transparent 65%);
+}
+
+h1{
+    margin:0;
+    font-size:26px;
+}
+
+.lead{
+    color:var(--muted);
+    margin-bottom:20px;
+}
+
+.steps{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.step{
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:1px dashed rgba(255,255,255,0.05);
+    text-align:center;
+    color:var(--muted);
+}
+
+.step.active{
+    border:1px solid rgba(178,0,255,0.25);
+    background:rgba(178,0,255,0.08);
+    color:#fff;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid rgba(180,100,255,0.14);
+    background:rgba(255,255,255,0.02);
+    color:white;
+    outline:none;
+    font-size:15px;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,0.35);
+}
+
+.btn{
+    padding:10px 16px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    background:linear-gradient(90deg,var(--neon),var(--accent));
+    color:#0b0010;
+    box-shadow:0 8px 20px rgba(123,0,255,0.18);
+}
+
+.btn.ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.08);
+    color:var(--muted);
+}
+
+.message{
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+
+.message.ok{
+    background:rgba(44,226,122,0.08);
+    border:1px solid rgba(44,226,122,0.12);
+    color:var(--success);
+}
+
+.message.err{
+    background:rgba(255,92,138,0.06);
+    border:1px solid rgba(255,92,138,0.12);
+    color:var(--danger);
+}
+
+.bottom-bar{
+    margin-top:20px;
+    display:flex;
+    justify-content:space-between;
+}
+.theme-toggle {
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    width: 48px;
+    height: 48px;
+    background: radial-gradient(circle, var(--neon), var(--accent));
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--neon), 0 0 40px var(--accent);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 22px;
+    transition: 0.3s ease;
+    z-index: 999;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px var(--neon), 0 0 60px var(--accent);
+}
+body.theme-neon {
+    background:
+        radial-gradient(circle at center, rgba(200,0,255,0.18), rgba(0,0,0,0.85)),
+        #07000a;
+}
+
+body.theme-neon .card {
+    border: 1px solid rgba(255,0,255,0.35);
+    box-shadow: 0 15px 50px rgba(200,0,255,0.45),
+                inset 0 0 45px rgba(200,0,255,0.12);
+}
+
+body.theme-neon .step.active {
+    background: rgba(255,0,255,0.14);
+    border-color: rgba(255,0,255,0.4);
+}
+
+body.theme-neon .btn {
+    background: linear-gradient(90deg, #ff00ff, #d400ff);
+    box-shadow: 0 8px 28px rgba(255,0,255,0.4);
+}
+body.theme-lite {
+    background: #f5f0ff;
+    color:#222;
+}
+
+body.theme-lite .card {
+    background:white;
+    border:1px solid #cdb2ff;
+    box-shadow:0 6px 26px rgba(120,0,200,0.25);
+}
+
+body.theme-lite input {
+    background:#fff;
+    color:#000;
+    border:1px solid #c49cff;
+}
+
+body.theme-lite .step.active {
+    background:#e6d6ff;
+    color:#3a0060;
+    border-color:#b874ff;
+}
+
+body.theme-lite .btn {
+    background:linear-gradient(90deg,#a200ff,#c000ff);
+    color:white;
+}
+.theme-toggle {
+    position: fixed !important;
+    top: 90px !important;   /* moved down */
+    right: 30px !important;
+    z-index: 500 !important; 
+    pointer-events: auto !important;
+}
+
+/* Close button inside card */
+.close-btn {
+    position: absolute !important;
+    top: 22px !important;
+    right: 22px !important;  /* <-- keeps it in top-right corner */
+
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+
+    background: rgba(255, 0, 180, 0.15);
+    border: 1px solid rgba(255, 0, 180, 0.35);
+    color: #fff;
+
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+
+    cursor: pointer;
+
+    z-index: 99999 !important;
+    pointer-events: auto !important;
+
+    transition: .25s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 0, 180, 0.25);
+    box-shadow: 0 0 15px rgba(255, 0, 180, 0.6);
+    transform: scale(1.1);
+}
+
+
+
+/* Prevent background blobs & effects from blocking clicks */
+.glow-blob,
+.theme-toggle::before,
+.theme-toggle::after,
+.card::before,
+.card::after {
+    pointer-events: none !important;
+}

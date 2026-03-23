@@ -1,0 +1,148 @@
+/* mobile_index.css — INSANE CYBER MODE (combined red/blue/green hybrid) */
+
+/* --- base reset --- */
+:root{
+  --bg:#030305;
+  --card:#0b0b0b;
+  --muted:#9a9fa6;
+  --accent-red:#ff2b2b;
+  --accent-cyan:#00e6ff;
+  --accent-green:#00e676;
+  --glass: rgba(255,255,255,0.02);
+  --neon1: linear-gradient(90deg,var(--accent-cyan),var(--accent-red));
+  --radius:14px;
+  --mono: "Courier New", Courier, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:radial-gradient(800px 400px at 8% 12%, rgba(255,0,0,0.03), transparent 6%), linear-gradient(180deg,#060608 0%, #020203 100%);color:#e8e8e8;font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+a{color:inherit;text-decoration:none}
+
+/* background canvas full */
+.bg-canvas{ position:fixed; inset:0; z-index:-2; opacity:0.28; }
+
+/* boot screen */
+.boot-screen{
+  position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.45));
+  backdrop-filter: blur(6px);
+}
+.boot-center{ text-align:center; width:360px; padding:28px; border-radius:16px; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03) }
+.boot-logo{ width:96px; height:96px; margin-bottom:12px; filter:drop-shadow(0 8px 28px rgba(255,43,43,0.06)); }
+.boot-title{ font-weight:800; font-size:20px; letter-spacing:2px; margin-bottom:6px }
+.boot-sub{ color:var(--muted); font-size:13px; margin-bottom:12px }
+.boot-progress{ height:8px; width:100%; background:rgba(255,255,255,0.03); border-radius:8px; overflow:hidden; margin-top:8px }
+.boot-bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--accent-cyan),var(--accent-red)); transition:width 300ms linear }
+
+/* topbar */
+.topbar{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; gap:12px; max-width:1100px; margin:0 auto }
+.topbar .left{ display:flex; align-items:center; gap:12px }
+.back{ color:var(--accent-cyan); font-family:var(--mono); font-weight:700 }
+.brand{ font-weight:800; letter-spacing:2px }
+.icon-btn{ background:transparent; border:1px solid rgba(205, 184, 184, 0.03); padding:8px 10px; border-radius:10px; cursor:pointer }
+
+/* main layout */
+.main-grid{ max-width:1100px; margin:18px auto; display:grid; grid-template-columns:360px 1fr; gap:18px; padding:0 16px }
+.card{ background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)); border-radius:12px; padding:14px; border:1px solid rgba(255,255,255,0.03) }
+.welcome-card .welcome-hdr{ margin-bottom:10px }
+.greet{ color:var(--muted); font-size:13px }
+.user{ font-size:20px; font-weight:700; letter-spacing:1px }
+
+/* HUD preview */
+.hud-preview{ display:flex; align-items:center; gap:12px; margin:10px 0 6px }
+.hud-ring{ width:128px; height:128px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; }
+.neon-ring{ box-shadow: 0 12px 40px rgba(0,230,255,0.06); border: 1px solid rgba(255,255,255,0.02); }
+.hud-core{ width:86px; height:86px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03) }
+.face-icon{ width:42px; height:42px; color:var(--accent-cyan); opacity:0.96 }
+
+/* neon button */
+.btn-row{ display:flex; gap:10px; margin-top:12px }
+.btn{ padding:12px 14px; border-radius:12px; font-weight:800; letter-spacing:1px; cursor:pointer; border:0 }
+.primary{ background: linear-gradient(90deg,var(--accent-cyan),var(--accent-red)); color:#050405 }
+.accent{ background: linear-gradient(90deg,var(--accent-green),var(--accent-red)); color:#020202 }
+.neon-btn{ position:relative; overflow:visible; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+.neon-btn::after{
+  content:""; position:absolute; inset:-8px; border-radius:14px; background:linear-gradient(90deg,var(--accent-cyan),var(--accent-red)); opacity:0.08; filter:blur(14px);
+  z-index:-1;
+}
+.small-notes{ color:var(--muted); margin-top:10px; font-size:13px }
+
+
+/* panel right */
+.status-card .card-title, .graph-card .card-title{ font-weight:700; margin-bottom:10px }
+.status-list{ display:flex; flex-direction:column; gap:8px }
+.status-item{ color:var(--muted); font-size:14px; display:flex; gap:8px; align-items:center }
+.dot{ width:10px; height:10px; border-radius:50%; display:inline-block }
+.ok{ background:var(--accent-green) }
+.warn{ background:#ffb86b }
+.control-row{ margin-top:12px; display:flex; gap:8px }
+
+.activity{ max-height:140px; overflow:auto; padding:6px; color:var(--muted); font-size:13px }
+.activity .act{ padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.02) }
+
+/* footer */
+.footer{ max-width:1100px; margin:20px auto; display:flex; justify-content:space-between; padding:0 16px; color:var(--muted); font-size:13px }
+
+/* small screens */
+@media (max-width:900px){
+  .main-grid{ grid-template-columns:1fr; padding-bottom:40px }
+  .hud-preview{ justify-content:center }
+}
+
+/* small fancy animations */
+@keyframes pulse-neon {
+  0% { transform: scale(1); opacity:1 }
+  50% { transform: scale(1.03); opacity:0.92 }
+  100% { transform: scale(1); opacity:1 }
+}
+.neon-btn:hover{ transform:translateY(-6px); animation:pulse-neon 800ms ease-in-out }
+
+/* shimmer for brand */
+.brand{ background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.28), rgba(255,255,255,0.12)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: shimmer 2.8s linear infinite }
+@keyframes shimmer { 0% { background-position:0% } 100% { background-position:200% } }
+
+
+
+
+.pin-popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+
+.pin-popup.hidden {
+    display: none;
+}
+
+.pin-popup-box {
+    background: rgba(20,0,40,0.8);
+    padding: 20px;
+    border-radius: 14px;
+    width: 85%;
+    box-shadow: 0 0 15px #5300ff88;
+}
+
+.popup-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: #1a0027;
+    border: 1px solid #7d00ff;
+    border-radius: 10px;
+    color: white;
+}
+
+.error-text {
+    color: #ff3b7a;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.error-text.hidden {
+    display: none;
+}

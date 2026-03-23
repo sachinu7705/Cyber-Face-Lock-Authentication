@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>View Users</title>
+
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <style>
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid #1a1a1a;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-left: 3px solid #00f2ff;
+            transition: all 0.3s ease;
+        }
+        
+        .user-item:hover {
+            background: rgba(0, 242, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff2b2b, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: #eee;
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .user-details {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .user-badge {
+            display: inline-block;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
+        .user-badge.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+        
+        .delete-btn {
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #ff3366;
+            transform: scale(1.05);
+        }
+        
+        .stats-bar {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            color: #00f2ff;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+        }
+    </style>
+    <script src="/static/js/view_users.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+    <button onclick="history.back()" class="back">←</button>
+    <div class="header-block">
+        <div class="app-title">VIEW USERS</div>
+        <div class="tagline">Enrolled Face Profiles</div>
+    </div>
+</header>
+
+<main class="list-container" id="userList">
+    <div class="loading">Loading users…</div>
+</main>
+
+</body>
+</html>

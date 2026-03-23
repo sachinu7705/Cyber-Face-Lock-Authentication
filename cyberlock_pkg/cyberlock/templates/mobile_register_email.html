@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Register Email</title>
+
+    <link rel="stylesheet" href="/static/css/cyber_common.css">
+    <script src="/static/js/register_email.js" defer></script>
+</head>
+
+<body class="cyber-shell">
+
+<header class="cyber-top">
+    <button onclick="history.back()" class="back">←</button>
+    <div class="header-block">
+        <div class="app-title">REGISTER EMAIL</div>
+        <div class="tagline">Reset PIN Email Setup</div>
+    </div>
+</header>
+
+<main class="form-wrapper glass-section">
+
+    <div class="register-email-box">
+
+    <h2 class="register-email-title">REGISTER EMAIL</h2>
+
+    
+    <label class="email-label">Email Address</label>
+
+<input id="emailInput" class="email-input" type="email" placeholder="example@gmail.com">
+
+<button id="sendCodeBtn" class="email-btn">Send Verification Code</button>
+
+
+    <!-- OTP Section -->
+    <div id="step2" style="display:none; margin-top:25px;">
+
+        <label class="lbl">Enter Verification Code</label>
+
+        <div class="otp-container">
+            <input maxlength="1" class="otp-box" />
+            <input maxlength="1" class="otp-box" />
+            <input maxlength="1" class="otp-box" />
+            <input maxlength="1" class="otp-box" />
+            <input maxlength="1" class="otp-box" />
+            <input maxlength="1" class="otp-box" />
+        </div>
+
+        <button id="verifyBtn" class="cyber-btn">Verify & Save Email</button>
+        <div id="resendWrapper" style="text-align:center; margin-top:10px; display:none;">
+            <button id="resendBtn" class="cyber-btn" style="margin-top:10px; opacity:0.6;">Resend Code (60s)</button>
+        </div>
+
+    </div>
+
+    <div id="status" class="status"></div>
+
+</main>
+
+
+</body>
+</html>
