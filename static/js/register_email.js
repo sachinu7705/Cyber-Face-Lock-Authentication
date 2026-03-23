@@ -169,12 +169,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // -----------------------------
         // SAVE EMAIL
         // -----------------------------
+        const emailToSave = emailInput.value.trim(); // Get the email string
+
         let saveRes = await fetch("/api/register_email", {
             method: "POST",
-            body: fd
+            headers: { "Content-Type": "application/json" }, // Tell server we are sending JSON
+            body: JSON.stringify({ email: emailToSave })    // Send as JSON object
         });
-
-        let saveData = await saveRes.json();
+                let saveData = await saveRes.json();
 
         // -----------------------------
         // SUCCESS ANIMATION

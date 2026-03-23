@@ -1,7 +1,11 @@
-// mobile_index.js — INSANE CYBER MODE behavior
-console.log("mobile_index.js loaded");
+// mobile_index.js — Enhanced Cyber Mode with Stats and Features
+console.log("🚀 Cyber Lock Enhanced v2.0 loaded");
 
-// ---------- simple boot sequence ----------
+// ---------- Global Variables ----------
+let activityLog = [];
+let currentUser = null;
+
+// ---------- Boot Sequence ----------
 (function boot(){
   const bootScreen = document.getElementById("bootScreen");
   const bootBar = document.getElementById("bootBar");
@@ -13,6 +17,7 @@ console.log("mobile_index.js loaded");
     "Loading face model",
     "Initializing locked apps",
     "Securing local storage",
+    "Loading user data",
     "Ready"
   ];
 
@@ -21,7 +26,6 @@ console.log("mobile_index.js loaded");
     if(p > 100) p = 100;
     bootBar.style.width = p + "%";
 
-    // occasionally update subtitle
     const sub = document.querySelector(".boot-sub");
     if(sub) sub.textContent = steps[Math.floor(p / (100 / steps.length))] || "Ready";
 
@@ -37,7 +41,7 @@ console.log("mobile_index.js loaded");
   }, 160);
 })();
 
-// ---------- background energy (matrix + glow) ----------
+// ---------- Background Matrix Effect ----------
 (function bg() {
   const canvas = document.getElementById("bgCanvas");
   if(!canvas) return;
@@ -56,7 +60,6 @@ console.log("mobile_index.js loaded");
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // red/blue gradient glow
     const g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
     g.addColorStop(0, "rgba(0,230,255,0.03)");
     g.addColorStop(0.5, "rgba(0,255,120,0.02)");
@@ -78,63 +81,175 @@ console.log("mobile_index.js loaded");
   requestAnimationFrame(frame);
 })();
 
-// ---------- quick DOM helpers ----------
-const q = sel => document.querySelector(sel);
-const qAll = sel => Array.from(document.querySelectorAll(sel));
-
-// ---------- elements ----------
+// ---------- DOM Elements ----------
 const enrollBtn = document.getElementById("enrollBtn");
 const unlockBtn = document.getElementById("unlockBtn");
-const lockedAppsBtn = document.getElementById("lockedAppsBtn");
-const selectAppsBtn = document.getElementById("selectAppsBtn");
-const changePinBtn = document.getElementById("changePinBtn");
-const resetPinBtn = document.getElementById("resetPinBtn");
-const openMenuBtn = document.getElementById("openMenuBtn");
 const bootAgainBtn = document.getElementById("bootAgainBtn");
-const activityLog = document.getElementById("activityLog");
+const activityLogEl = document.getElementById("activityLog");
 const userNameEl = document.getElementById("userName");
+const userEmailEl = document.getElementById("userEmail");
 const camStatus = document.getElementById("camStatus");
 const modelStatus = document.getElementById("modelStatus");
+const createPinBtn = document.getElementById("createPinBtn");
+const themeToggle = document.getElementById("themeToggle");
+const refreshStatsBtn = document.getElementById("refreshStatsBtn");
 
-// fallback checks
-if(!enrollBtn || !unlockBtn) {
-  console.warn("core buttons missing — are you on index page?");
+// ---------- Helper Functions ----------
+function pushActivity(text, type = "info") {
+  const timestamp = new Date().toLocaleTimeString();
+  const activity = { timestamp, text, type };
+  activityLog.unshift(activity);
+  
+  // Keep only last 20 activities
+  if (activityLog.length > 20) activityLog.pop();
+  
+  // Update UI
+  if (activityLogEl) {
+    if (activityLogEl.firstChild && activityLogEl.firstChild.textContent === "No recent activity") {
+      activityLogEl.innerHTML = "";
+    }
+    
+    const el = document.createElement("div");
+    el.className = "act";
+    el.style.cssText = `
+      padding: 8px;
+      border-left: 3px solid ${type === 'error' ? '#ff4444' : '#ff2b2b'};
+      margin-bottom: 5px;
+      font-size: 11px;
+      animation: fadeIn 0.3s ease;
+    `;
+    el.innerHTML = `<span style="color: #00e6ff;">[${timestamp}]</span> ${text}`;
+    activityLogEl.prepend(el);
+  }
+  
+  console.log(`[${timestamp}] ${text}`);
 }
 
-// ---------- record activity ----------
-function pushActivity(text){
-  const el = document.createElement("div"); el.className = "act"; el.textContent = `${new Date().toLocaleTimeString()} — ${text}`;
-  if(activityLog.firstChild && activityLog.firstChild.textContent === "No recent activity") activityLog.innerHTML = "";
-  activityLog.prepend(el);
+function showError(message) {
+  pushActivity(`❌ ${message}`, "error");
+  const statusDiv = document.getElementById("unlockMsg") || document.createElement("div");
+  if (statusDiv.tagName === "DIV") {
+    statusDiv.style.color = "#ff4444";
+    statusDiv.textContent = message;
+    setTimeout(() => {
+      if (statusDiv.textContent === message) statusDiv.textContent = "";
+    }, 3000);
+  }
 }
 
-// ---------- navigation actions (uses your existing endpoints) ----------
-enrollBtn && enrollBtn.addEventListener("click", ()=> {
+function showSuccess(message) {
+  pushActivity(`✅ ${message}`, "success");
+}
+
+// ---------- Load Statistics ----------
+async function loadStatistics() {
+  try {
+    const res = await fetch("/api/list_users");
+    const data = await res.json();
+    
+    if (data.status === "ok") {
+      const users = data.users || [];
+      const totalUsers = users.length;
+      const faceEnrolled = users.filter(u => u.face_enrolled).length;
+      
+      if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+      if (faceEnrolledEl) faceEnrolledEl.textContent = faceEnrolled;
+      
+      // Update face status indicator
+      if (faceStatus) {
+        if (faceEnrolled > 0) {
+          faceStatus.className = "dot ok";
+          faceDataStatus.textContent = `${faceEnrolled} user(s) enrolled`;
+        } else {
+          faceStatus.className = "dot warn";
+          faceDataStatus.textContent = "No face data";
+        }
+      }
+      
+      // Update last access (from localStorage)
+      const lastAccess = localStorage.getItem("lastAccess");
+      if (lastAccess && lastAccessEl) {
+        const date = new Date(parseInt(lastAccess));
+        lastAccessEl.textContent = date.toLocaleTimeString();
+      } else if (lastAccessEl) {
+        lastAccessEl.textContent = "First visit";
+      }
+    }
+  } catch (error) {
+    console.error("Error loading stats:", error);
+  }
+}
+
+// ---------- Load User Info ----------
+// Update the loadUserInfo function to use the new elements
+async function loadUserInfo() {
+  try {
+    const storedUser = localStorage.getItem("currentUser");
+    const storedEmail = localStorage.getItem("userEmail");
+    
+    // Update user name in multiple places
+    if (storedUser && userNameEl) {
+      userNameEl.textContent = storedUser;
+      
+      // Update the new user name line
+      const userNameLine = document.getElementById("userNameLine");
+      if (userNameLine) userNameLine.textContent = storedUser;
+      
+      // Update avatar
+      const userAvatarLarge = document.getElementById("userAvatarLarge");
+      if (userAvatarLarge) {
+        userAvatarLarge.style.display = "flex";
+        userAvatarLarge.textContent = storedUser.charAt(0).toUpperCase();
+      }
+    }
+    
+    // Update email line
+    if (storedEmail && userEmailEl) {
+      userEmailEl.textContent = storedEmail;
+      
+      const userEmailLine = document.getElementById("userEmailLine");
+      if (userEmailLine) userEmailLine.textContent = storedEmail;
+    }
+    
+    // Rest of the function remains the same...
+  } catch (error) {
+    console.error("Error loading user info:", error);
+  }
+}
+
+// ---------- Navigation Handlers ----------
+enrollBtn?.addEventListener("click", () => {
   pushActivity("Navigate: Enroll Flow");
-  // small burst animation
-  enrollBtn.animate([{ transform: "scale(1)" }, { transform:"scale(0.96)" }, { transform:"scale(1)" }], { duration: 380 });
-  setTimeout(()=> location.href = "/mobile/enroll", 260);
+  setTimeout(()=> location.href = "/mobile/enroll", 180);
 });
 
-unlockBtn && unlockBtn.addEventListener("click", ()=> {
+unlockBtn?.addEventListener("click", () => {
   pushActivity("Navigate: Unlock Flow");
-  unlockBtn.animate([{ transform: "scale(1)" }, { transform:"scale(0.98)" }, { transform:"scale(1)" }], { duration: 280 });
   setTimeout(()=> location.href = "/mobile/unlock", 180);
 });
 
-
-
-bootAgainBtn && bootAgainBtn.addEventListener("click", ()=> {
-  // simply re-run the small boot animation by creating overlay again
-  const existing = document.querySelector(".boot-screen");
-  if(existing) existing.remove();
-  location.reload();
+bootAgainBtn?.addEventListener("click", () => {
+  pushActivity("Rebooting system...");
+  setTimeout(()=> location.reload(), 200);
 });
 
-// ---------- theme toggle (cycles colors) ----------
-const themeToggle = document.getElementById("themeToggle");
+refreshStatsBtn?.addEventListener("click", async () => {
+  pushActivity("Refreshing statistics...");
+  await loadStatistics();
+  showSuccess("Statistics refreshed");
+});
+
+clearActivityBtn?.addEventListener("click", () => {
+  activityLog = [];
+  if (activityLogEl) {
+    activityLogEl.innerHTML = '<div class="act">No recent activity</div>';
+  }
+  pushActivity("Activity log cleared");
+});
+
+// ---------- Theme Toggle ----------
 let themeMode = 0;
-themeToggle && themeToggle.addEventListener("click", ()=>{
+themeToggle?.addEventListener("click", ()=>{
   themeMode = (themeMode + 1) % 3;
   if(themeMode === 0){
     document.documentElement.style.setProperty("--accent-cyan", "#00e6ff");
@@ -151,144 +266,212 @@ themeToggle && themeToggle.addEventListener("click", ()=>{
   }
 });
 
-// ---------- status updater (mock: uses local resources) ----------
-(function statusMock(){
-  camStatus && (camStatus.textContent = "Available");
-  modelStatus && (modelStatus.textContent = "OK");
+// ---------- Status Update ----------
+(async function statusUpdate(){
+  camStatus && (camStatus.textContent = "✅ Available");
+  modelStatus && (modelStatus.textContent = "✅ Loaded");
   pushActivity("System ready");
+  
+  // Check if user has face enrolled
+  const storedUser = localStorage.getItem("currentUser");
+  if (storedUser) {
+    try {
+      const res = await fetch("/api/list_users");
+      const data = await res.json();
+      const user = data.users?.find(u => u.username === storedUser);
+      if (user && user.face_enrolled) {
+        pushActivity(`Welcome back ${storedUser}! Face data found.`);
+      } else if (user) {
+        pushActivity(`Welcome ${storedUser}! Please enroll your face.`);
+      }
+    } catch(e) {}
+  }
 })();
 
-// ---------- accessibility: keyboard shortcuts ----------
-addEventListener("keydown", (e)=>{
-  if(e.key === "e") enrollBtn && enrollBtn.click();
-  if(e.key === "u") unlockBtn && unlockBtn.click();
-  if(e.key === "l") lockedAppsBtn && lockedAppsBtn.click();
+// ---------- PIN Existence Check ----------
+async function checkPinExistsAndUpdateUI() {
+  try {
+    const response = await fetch("/api/pin_exists");
+    const data = await response.json();
+    
+    if (createPinBtn) {
+      if (data.exists) {
+        createPinBtn.style.display = "none";
+        pushActivity("PIN already set");
+      } else {
+        createPinBtn.style.display = "block";
+        pushActivity("No PIN found. Please create one.");
+      }
+    }
+    return data.exists;
+  } catch (error) {
+    console.error("Error checking PIN:", error);
+    if (createPinBtn) createPinBtn.style.display = "block";
+    return false;
+  }
+}
+
+// ---------- Create PIN Button ----------
+createPinBtn?.addEventListener("click", () => {
+  pushActivity("Navigate: Create PIN");
+  window.location.href = "/create_pin";
 });
 
-// ---------- small UX polish: neon ring pulse ----------
+// ---------- Reset PIN Popup ----------
+const resetPinPopup = document.getElementById("resetPinPopup");
+const resetSaveBtn = document.getElementById("resetSaveBtn");
+const resetPin = document.getElementById("resetPin");
+const resetPin2 = document.getElementById("resetPin2");
+const resetError = document.getElementById("resetError");
+
+window.openResetPassword = function() {
+  if (resetPinPopup) resetPinPopup.classList.remove("hidden");
+}
+
+if (resetSaveBtn) {
+  resetSaveBtn.onclick = async () => {
+    let p1 = resetPin?.value;
+    let p2 = resetPin2?.value;
+
+    if (p1 !== p2) {
+      if (resetError) resetError.classList.remove("hidden");
+      return;
+    }
+
+    if (!p1 || p1.length !== 4 || !/^\d{4}$/.test(p1)) {
+      showError("PIN must be exactly 4 digits");
+      return;
+    }
+
+    try {
+      await fetch("/api/reset_main_pin", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ pin: p1 })
+      });
+
+      showSuccess("PIN reset successfully!");
+      if (resetPinPopup) resetPinPopup.classList.add("hidden");
+      setTimeout(() => location.reload(), 1500);
+    } catch (error) {
+      showError("Failed to reset PIN");
+    }
+  };
+}
+
+// ---------- Create PIN Popup ----------
+const createPinPopup = document.getElementById("createPinPopup");
+const newPin = document.getElementById("newPin");
+const confirmPin = document.getElementById("confirmPin");
+const pinError = document.getElementById("pinError");
+const savePinBtn = document.getElementById("savePinBtn");
+
+// Restrict PIN inputs to 4 digits
+[newPin, confirmPin, resetPin, resetPin2].forEach(input => {
+  if (input) {
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/\D/g, "");
+      if (input.value.length > 4) input.value = input.value.slice(0, 4);
+    });
+  }
+});
+
+// Initialize
+document.addEventListener("DOMContentLoaded", async () => {
+  const pinExists = await checkPinExistsAndUpdateUI();
+  
+  if (createPinPopup) {
+    if (!pinExists) {
+      createPinPopup.classList.remove("hidden");
+      pushActivity("First time setup - Create your PIN");
+    } else {
+      createPinPopup.classList.add("hidden");
+    }
+  }
+  
+  if (savePinBtn) {
+    savePinBtn.onclick = async () => {
+      let p1 = newPin?.value;
+      let p2 = confirmPin?.value;
+
+      if (p1 !== p2) {
+        if (pinError) pinError.classList.remove("hidden");
+        return;
+      }
+
+      if (!p1 || p1.length !== 4 || !/^\d{4}$/.test(p1)) {
+        showError("PIN must be exactly 4 digits");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/create_pin", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ pin: p1 })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          showSuccess("PIN created successfully!");
+          if (createPinPopup) createPinPopup.classList.add("hidden");
+          if (createPinBtn) createPinBtn.style.display = "none";
+          pushActivity("PIN created successfully");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showError(data.msg || "Failed to create PIN");
+        }
+      } catch (error) {
+        showError("Failed to create PIN");
+      }
+    };
+  }
+  
+  // Load all data
+  await loadStatistics();
+  await loadUserInfo();
+  
+  // Store access time
+  localStorage.setItem("lastAccess", Date.now().toString());
+  pushActivity("Dashboard loaded");
+});
+
+// ---------- Keyboard Shortcuts ----------
+addEventListener("keydown", (e)=>{
+  if(e.key === "e") enrollBtn?.click();
+  if(e.key === "u") unlockBtn?.click();
+  if(e.key === "r") window.openResetPassword?.();
+  if(e.key === "s") refreshStatsBtn?.click();
+});
+
+// ---------- Neon Ring Pulse ----------
 (function ringPulse(){
   const ring = document.getElementById("neonRing");
   if(!ring) return;
   setInterval(()=> ring.animate([{ transform:"scale(1)" }, { transform:"scale(1.04)" }, { transform:"scale(1)" }], { duration: 1400 }), 1600);
 })();
 
-// ---------- load user name from config if exists ----------
-(function loadUser(){
-  try {
-    const u = localStorage.getItem("cyber_user") || "Guest";
-    userNameEl.textContent = u;
-  } catch(e){}
-})();
-
-// ---------- network ping to server (keeps alive) ----------
-(function ping(){
-  setInterval(()=>{
-    fetch("/api/get_apps/default").catch(()=>{/* ignore */});
-  }, 30_000);
-})();
-
-
-document.addEventListener("DOMContentLoaded", async () => {
-  
-  const exists = await fetch("/api/pin_exists").then(r=>r.json());
-  fetch("/api/pin_exists")
-  .then(res => res.json())
-  .then(data => {
-      const createBtn = document.getElementById("createPinBtn");
-
-      if (data.exists) {
-          // ❌ Hide create button
-          createBtn.style.display = "none";
-      } else {
-          // ✅ Show create button
-          createBtn.style.display = "block";
-      }
-  });
-  // Show create password popup if no PIN exists
-  if (!exists.exists) {
-      document.getElementById("createPinPopup").classList.remove("hidden");
-  }
-
-  // SAVE NEW PIN
-  document.getElementById("savePinBtn").onclick = async () => {
-      let p1 = newPin.value;
-      let p2 = confirmPin.value;
-
-      if (p1 !== p2) {
-          pinError.classList.remove("hidden");
-          return;
-      }
-
-      await fetch("/api/create_pin", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ pin: p1 })
-      });
-
-      location.reload();
-  };
-  document.getElementById("createPinBtn")?.addEventListener("click", () => {
-      window.location.href = "/create_pin"; 
-  }); 
-  // RESET PIN FROM HOME PAGE BUTTON
-  window.openResetPassword = function() {
-      document.getElementById("resetPinPopup").classList.remove("hidden");
-  }
-
-  resetSaveBtn.onclick = async () => {
-      let p1 = resetPin.value;
-      let p2 = resetPin2.value;
-
-      if (p1 !== p2) {
-          resetError.classList.remove("hidden");
-          return;
-      }
-
-      await fetch("/api/reset_main_pin", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ pin: p1 })
-      });
-
-      alert("Password Reset Successfully!");
-      location.reload();
-  };
-
-});
-// =========================================================
-// FINAL APP OPEN HANDLER (LOCK CHECK + REDIRECT TO FACE)
-// =========================================================
-
-// This function will be used by your app tiles/buttons
-// Example: <div onclick="openApp('chrome','Chrome','icon.png')">
-
+// ---------- App Open Handler ----------
 async function openApp(appid, appname, icon) {
+  const res = await fetch("/api/is_app_locked", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ appid })
+  }).then(r => r.json());
 
-    // 1) Ask backend if app is locked
-    const res = await fetch("/api/is_app_locked", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ appid })
-    }).then(r => r.json());
+  if (res.locked === true) {
+    window.location.href = `/mobile/open-app?name=${encodeURIComponent(appname)}&id=${encodeURIComponent(appid)}&icon=${encodeURIComponent(icon)}`;
+    return;
+  }
 
-    // 2) If locked → go to face unlock
-    if (res.locked === true) {
-        window.location.href =
-            `/mobile/open-app?name=${encodeURIComponent(appname)}`
-            + `&id=${encodeURIComponent(appid)}`
-            + `&icon=${encodeURIComponent(icon)}`;
-        return;
-    }
-
-    // 3) Otherwise open normally
-    launchAppNormally(appname);
+  launchAppNormally(appname);
 }
 
-
-// =========================================================
-// Default normal launcher (you can update as you like)
-// =========================================================
 function launchAppNormally(appname) {
-    alert("Opening app normally: " + appname);
-    // Here you can launch Linux apps using backend if needed
+  pushActivity(`Launching app: ${appname}`);
+  alert(`Opening app: ${appname}`);
 }
+
+window.openApp = openApp;
+window.launchAppNormally = launchAppNormally;

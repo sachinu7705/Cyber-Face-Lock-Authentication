@@ -1,3 +1,5 @@
+/* view_email.js — View and manage registered emails */
+
 document.addEventListener("DOMContentLoaded", async () => {
     const listContainer = document.querySelector(".list-container");
     const popup = document.getElementById("confirmPopup");
@@ -7,107 +9,181 @@ document.addEventListener("DOMContentLoaded", async () => {
     let emailToDelete = null;
 
     async function loadEmails() {
-        // Show scanning status
-        listContainer.innerHTML = '<div class="status" style="color:#00f2ff">SCANNING VAULT...</div>';
-        
+        const emailList = document.getElementById("emailList") || document.querySelector(".list-container");
+        if (!emailList) return;
+
+        emailList.innerHTML = "<div style='color:#00f2ff; text-align:center; padding:20px;'>🔍 ACCESSING VAULT...</div>";
+
         try {
-            let res = await fetch("/api/get_saved_email");
-            let data = await res.json();
+            const res = await fetch("/api/get_saved_email");
+            const data = await res.json();
 
-            listContainer.innerHTML = '';
+            console.log("📧 Loaded emails:", data);
 
-            if (data.status === "ok" && data.emails && data.emails.length > 0) {
-
-                if (data.emails && data.emails.length > 0) {
-                    data.emails.forEach((email, index) => {
-                        const row = document.createElement("div");
-
-                        row.className = "email-row";
-                        row.style.cssText = `
-                            display:flex;
-                            justify-content:space-between;
-                            align-items:center;
-                            margin-bottom:15px;
-                            padding:10px;
-                            border-bottom:1px solid #333;
-                        `;
-
-                        row.innerHTML = `
-                            <div class="email-left">
-                                <div class="email-text" style="font-family:monospace;">
-                                    <b style="color:#00f2ff;">[ID: ${index + 1}]</b><br>${email}
-                                </div>
-                            </div>
-                            <div class="email-right">
-                                <button class="danger-btn small-btn" onclick="prepareDelete('${email}')">
-                                    DELETE
-                                </button>
-                            </div>
-                        `;
-
-                        listContainer.appendChild(row);
-                    });
-                } else {
-                    listContainer.innerHTML = `
-                        <div style="text-align:center; padding:30px; color:#ff8aa0;">
-                            NO RECOVERY DATA FOUND
-                        </div>
-                    `;
-                }
-
-                // ✅ ALWAYS SHOW BUTTON
-                const addMoreBtn = document.createElement("button");
-                addMoreBtn.className = "cyber-btn";
-                addMoreBtn.style.width = "100%";
-                addMoreBtn.style.marginTop = "20px";
-                addMoreBtn.innerText = "+ REGISTER NEW EMAIL";
-                addMoreBtn.onclick = () => location.href = '/mobile/register-email';
-
-                listContainer.appendChild(addMoreBtn);
+            if (data.status !== "ok") {
+                emailList.innerHTML = `<div style='color:#ff0055; text-align:center;'>❌ ${data.msg || "FAILED TO LOAD IDENTITIES"}</div>`;
+                return;
             }
-            else {
-                // Empty State View
-                listContainer.innerHTML = `
-                    <div style="text-align:center; padding:50px; border:1px dashed #ff8aa0; color:#ff8aa0;">
-                        <div style="font-size:18px; margin-bottom:15px; font-family:monospace;">NO RECOVERY DATA FOUND</div>
-                        <button class="cyber-btn" onclick="location.href='/mobile/register-email'">
-                            INITIALIZE REGISTRATION
+
+            emailList.innerHTML = "";
+
+            if (data.emails && data.emails.length > 0) {
+                data.emails.forEach(email => {
+                    const row = document.createElement("div");
+                    row.className = "email-item";
+                    row.style.cssText = `
+                        background: rgba(0, 242, 255, 0.05);
+                        border: 1px solid #1a1a1a;
+                        margin-bottom: 10px;
+                        padding: 15px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-left: 3px solid #00f2ff;
+                        transition: all 0.3s ease;
+                    `;
+
+                    row.innerHTML = `
+                        <div style="color:#eee; font-family:monospace; font-size:14px;">
+                            📧 ${email}
+                        </div>
+                        <button onclick="prepareDelete('${email}')" 
+                            style="background:#ff0055; border:none; color:white; padding:6px 14px; 
+                            cursor:pointer; font-weight:bold; font-size:12px; border-radius:4px;
+                            transition: all 0.2s ease;">
+                            REMOVE
                         </button>
+                    `;
+                    
+                    // Add hover effect
+                    const btn = row.querySelector('button');
+                    btn.onmouseover = () => {
+                        btn.style.transform = 'scale(1.05)';
+                        btn.style.background = '#ff3366';
+                    };
+                    btn.onmouseout = () => {
+                        btn.style.transform = 'scale(1)';
+                        btn.style.background = '#ff0055';
+                    };
+                    
+                    emailList.appendChild(row);
+                });
+                
+                // Add count display
+                const countDiv = document.createElement("div");
+                countDiv.style.cssText = `
+                    margin-top: 20px;
+                    padding: 10px;
+                    text-align: center;
+                    color: #00f2ff;
+                    font-family: monospace;
+                    font-size: 12px;
+                    border-top: 1px solid rgba(0,242,255,0.2);
+                `;
+                countDiv.innerHTML = `📊 Total emails: ${data.emails.length}`;
+                emailList.appendChild(countDiv);
+                
+            } else {
+                emailList.innerHTML = `
+                    <div style='color:#444; text-align:center; padding:40px;'>
+                        <div style="font-size: 48px; margin-bottom: 10px;">📭</div>
+                        <div>NO EMAILS REGISTERED</div>
+                        <div style="font-size: 11px; margin-top: 10px;">Use 'Register Email' to add one</div>
                     </div>
                 `;
             }
+
         } catch (err) {
-            listContainer.innerHTML = '<div class="status" style="color:red;">CONNECTION ERROR</div>';
+            console.error("Fetch error:", err);
+            emailList.innerHTML = "<div style='color:red; text-align:center; padding:20px;'>❌ VAULT CONNECTION ERROR</div>";
         }
     }
 
-    // Make it global so the button onclick can see it
+    // Make functions global
+    window.loadEmails = loadEmails;
     window.prepareDelete = (email) => {
         emailToDelete = email;
-        if (popup) popup.classList.remove("popup-hidden");
+        if (popup) {
+            popup.classList.remove("popup-hidden");
+            // Update popup text to show which email will be deleted
+            const popupText = popup.querySelector(".popup-text");
+            if (popupText) {
+                popupText.innerHTML = `Are you sure you want to remove <strong>${email}</strong> from authorized list?`;
+            }
+        }
     };
 
-    
     if (cancelDelete) {
-        cancelDelete.onclick = () => popup.classList.add("popup-hidden");
+        cancelDelete.onclick = () => {
+            popup.classList.add("popup-hidden");
+            emailToDelete = null;
+        };
     }
 
     if (confirmDelete) {
         confirmDelete.onclick = async () => {
-            try {
-                let res = await fetch("/api/delete_saved_email", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({ email: emailToDelete })
-                });
-                
+            if (emailToDelete) {
+                await executeDelete(emailToDelete);
                 popup.classList.add("popup-hidden");
-                loadEmails(); // Refresh list
-            } catch (e) {
-                alert("Delete failed. Check connection.");
+                emailToDelete = null;
             }
         };
     }
 
+    async function executeDelete(email) {
+        try {
+            const res = await fetch("/api/delete_saved_email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email: email })
+            });
+            
+            const data = await res.json();
+            
+            if (data.status === "ok") {
+                // Show success message
+                const statusDiv = document.createElement("div");
+                statusDiv.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: rgba(76, 175, 80, 0.9);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-family: monospace;
+                    z-index: 1000;
+                    animation: fadeOut 2s forwards;
+                `;
+                statusDiv.innerHTML = "✅ Email removed successfully!";
+                document.body.appendChild(statusDiv);
+                
+                setTimeout(() => statusDiv.remove(), 2000);
+                
+                // Refresh the list
+                loadEmails();
+            } else {
+                alert("Delete failed: " + (data.msg || "Unknown error"));
+            }
+        } catch (e) {
+            console.error("Delete request failed:", e);
+            alert("Server error during deletion.");
+        }
+    }
+
+    // Add CSS animation for fadeOut
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); visibility: hidden; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Load emails when page loads
     loadEmails();
 });

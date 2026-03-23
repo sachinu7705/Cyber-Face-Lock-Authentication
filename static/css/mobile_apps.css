@@ -303,3 +303,21 @@ body.cyber-shell{
     z-index: 10;
     pointer-events: none; /* Make sure it doesn't block clicks */
 }
+/* Success particle animation */
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(0);
+    opacity: 0;
+  }
+}
+
+.success-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  animation: particleFloat 1s ease-out forwards;
+}

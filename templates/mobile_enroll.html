@@ -3,14 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Enroll — Smart Face Lock (Cyber)</title>
-
+  <title>Enroll —  Smart Face Lock (Cyber)</title>
   
   <!-- Cyber CSS -->
   <link rel="stylesheet" href="/static/css/cyber_enroll.css">
 
-  <!-- Inline fallback for video styling -->
-  <style>video{display:block;width:100%;height:auto;background:#000}</style>
+  <style>
+    video{display:block;width:100%;height:auto;background:#000}
+    .username-status {
+      font-size: 12px;
+      margin-top: 5px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .username-status.info { color: #2196f3; background: rgba(33,150,243,0.1); }
+    .username-status.warning { color: #ff9800; background: rgba(255,152,0,0.1); }
+    .username-status.success { color: #4caf50; background: rgba(76,175,80,0.1); }
+    .username-status.error { color: #f44336; background: rgba(244,67,54,0.1); }
+  </style>
 </head>
 <body>
   <div class="cyber-shell">
@@ -37,10 +47,26 @@
     <main class="cyber-main">
       <section class="panel">
         <div class="panel-left">
-          <label class="lbl">USER NAME</label>
-          <input id="enrollName" class="in" placeholder="e.g. sachin">
-          <label class="lbl">ADMIN PIN</label>
-          <input id="enrollPin" class="in" placeholder="4-DIGIT-PIN" type="password">
+          <label class="lbl">USERNAME</label>
+          <input 
+            type="text" 
+            id="enrollUsername" 
+            class="in"
+            placeholder="Enter your username"
+            required
+          />
+          <div id="usernameStatus" class="username-status"></div>
+          
+          <label class="lbl">SECURITY PIN</label>
+          <input 
+            type="password" 
+            id="enrollPin" 
+            class="in"
+            maxlength="4" 
+            pattern="\d{4}" 
+            inputmode="numeric" 
+            placeholder="Enter 4-digit PIN" 
+          />
 
           <div class="btn-row">
             <button id="startScanBtn" class="btn btn-danger">START SCAN</button>
@@ -59,13 +85,10 @@
             <div class="video-scene">
               <video id="enrollVideo" autoplay playsinline muted></video>
               <canvas id="overlay" class="overlay"></canvas>
-
-              <!-- decorative red scan ring (CSS animated) -->
               <div class="red-ring" aria-hidden>
                 <div class="ring-core"></div>
               </div>
             </div>
-
             <div class="thumbs" id="thumbList" aria-live="polite"></div>
             <button id="confirmUploadBtn" class="btn btn-danger btn-wide">SAVE FACE</button>
           </div>
@@ -77,7 +100,6 @@
       <div class="marquee">⚠️ CYBER MODE — LOCAL ONLY • DO NOT DEPLOY WITH DEFAULT PIN ⚠️</div>
     </footer>
 
-    <!-- keep linking to your mobile.js (scanning + mediapipe code) -->
     <script>window.pageType='enroll'</script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>

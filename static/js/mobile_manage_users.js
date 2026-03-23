@@ -3,28 +3,39 @@ console.log("Manage Users - Cyberpunk Mode Loaded");
 /* ------------------------
    Navigation
    ------------------------ */
-document.getElementById("goBack").onclick = () => {
-    history.back();
-};
+const goBackBtn = document.getElementById("goBack");
+if (goBackBtn) {
+    goBackBtn.onclick = () => {
+        history.back();
+    };
+}
 
 /* ------------------------
    Buttons → Pages
    ------------------------ */
-document.getElementById("viewUsers").onclick = () => {
-    window.location.href = "/mobile/view-users";
-};
-document.getElementById("launcherApps").onclick = () => {
-    window.location.href = "/mobile/apps";
-};
+// Apps Launcher
+const launcherApps = document.getElementById("launcherApps");
+if (launcherApps) {
+    launcherApps.onclick = () => {
+        window.location.href = "/mobile/apps";
+    };
+}
 
-document.getElementById("addUsers").onclick = () => {
-    window.location.href = "/mobile/enroll";
-};
 
-document.getElementById("deleteUsers").onclick = () => {
-    window.location.href = "/mobile/delete-user";
-};
+// Delete Users
+const deleteUsers = document.getElementById("deleteUsers");
+if (deleteUsers) {
+    deleteUsers.onclick = () => {
+        window.location.href = "/mobile/delete-user";
+    };
+}
 
-document.getElementById("registerEmail").onclick = () => {
-    window.location.href = "/mobile/register-email";
-};
+// Register Email
+const registerEmail = document.getElementById("registerEmail");
+if (registerEmail) {
+    registerEmail.onclick = () => {
+        window.location.href = "/mobile/register-email";
+    };
+}
+
+console.log("✅ All buttons initialized");

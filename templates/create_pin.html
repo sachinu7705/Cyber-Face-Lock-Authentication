@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberLock — Create PIN</title>
-
-    <link rel="stylesheet" href="/static/css/reset.css">
+    <link rel="stylesheet" href="/static/css/create_pin.css">
 </head>
 <body>
 
@@ -13,31 +12,41 @@
 
 <div class="wrap">
     <div class="card">
-
         <button id="closeCreate" class="close-btn">✕</button>
-
         <div class="glow-blob"></div>
-
-        <h1>Create PIN</h1>
-        <p class="lead">Set your secure PIN</p>
+        
+        <h1>CREATE PIN</h1>
+        <p class="lead">Initialize your secure access</p>
+        
+        <!-- Show message if users already exist -->
+        {% if users_exist %}
+        <div class="info-message" style="background: rgba(0,242,255,0.1); border-left: 3px solid #00f2ff; padding: 10px; margin-bottom: 20px; font-size: 12px;">
+            ℹ️ Existing users can login at <a href="/mobile" style="color: #00f2ff;">/mobile</a>
+        </div>
+        {% endif %}
 
         <div class="steps">
-            <div class="step" id="stepLabel-1">Email</div>
-            <div class="step" id="stepLabel-2">OTP</div>
-            <div class="step" id="stepLabel-3">Create PIN</div>
+            <div class="step" id="stepLabel-1">IDENTITY</div>
+            <div class="step" id="stepLabel-2">VERIFY</div>
+            <div class="step" id="stepLabel-3">SECURE</div>
         </div>
 
         <div id="content"></div>
 
         <div class="bottom-bar">
-            <button class="btn ghost" id="backBtn" style="display:none">Back</button>
-            <button type="button" class="btn" id="nextBtn">Continue</button>
+            <button class="btn ghost" id="backBtn" style="display:none">← BACK</button>
+            <button type="button" class="btn" id="nextBtn">CONTINUE →</button>
         </div>
-
+        
+        <!-- Link to login if users exist -->
+        {% if users_exist %}
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/mobile" style="color: #00f2ff; text-decoration: none; font-size: 12px;">Already have an account? → Login</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <script src="/static/js/create_pin.js"></script>
-
 </body>
 </html>

@@ -1,4 +1,3 @@
-# web_app.py — now including Locked Apps system
 import glob
 from pathlib import Path
 from shutil import copyfile
@@ -18,6 +17,11 @@ import platform
 from lock_manager import lock_app, unlock_app
 import subprocess
 import shlex
+import bcrypt
+import re  # <-- ADD THIS IMPORT
+
+from cryptography.fernet import Fernet
+
 
 # FORCE LOCAL MODE (no Docker / no cloud)
 IS_CLOUD = os.environ.get("RENDER") == "true"
@@ -33,8 +37,8 @@ import os
 
 app = Flask(__name__)
 FACE_DB = "face_db.json"
-
-
+FACE_DATA_DIR = "known_faces"
+app.secret_key = os.environ.get("SECRET_KEY", "dev_key")
 # 1. Load env
 from dotenv import load_dotenv
 load_dotenv()
@@ -51,6 +55,9 @@ app.config.update(
 
 # 3. Initialize Mail
 mail = Mail(app)   # ✅ REQUIRED
+key = Fernet.generate_key()
+cipher = Fernet(key)
+
 
 
 reset_tokens = {}
@@ -135,20 +142,23 @@ def save_faces(data):
 # Utility: Save Faces
 # ------------------------------
 def save_encoding_and_images(name, frames, encodings):
-    if IS_CLOUD:
-        return  # skip in cloud
+    # 1. Create a folder for the specific user
+    user_dir = os.path.join("known_faces", name)
+    os.makedirs(user_dir, exist_ok=True)
 
-    folder = f"known_faces/{name}"
-    os.makedirs(folder, exist_ok=True)
+    # 2. Save each encoding and its corresponding image frame
+    for i, (frame, enc) in enumerate(zip(frames, encodings)):
+        # Save the AI encoding (the numerical face fingerprint)
+        # Using index 'i' ensures we don't overwrite the previous angles
+        enc_filename = f"face_{i}.npy"
+        np.save(os.path.join(user_dir, enc_filename), enc)
 
-    for i, frame in enumerate(frames):
-        cv2.imwrite(
-            f"{folder}/{name}_{i+1}.jpg",
-            cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        )
-
-    final_enc = np.mean(encodings, axis=0)
-    np.save(f"{folder}/{name}.npy", final_enc)
+        # Save the actual image (useful for debugging or gallery view)
+        img_filename = f"face_{i}.jpg"
+        img_path = os.path.join(user_dir, img_filename)
+        Image.fromarray(frame).save(img_path)
+    
+    print(f"✅ Successfully secured {len(encodings)} biometric points for {name}")
 
 def verify_face_logic(image_data):
     try:
@@ -174,6 +184,26 @@ def verify_face_logic(image_data):
         print(f"Error: {e}")
         return False
 
+
+def download_face_model():
+    path = "models/dlib_face_recognition_resnet_model_v1.dat"
+
+    if os.path.exists(path):
+        return
+
+    print("[INFO] Downloading face recognition model...")
+
+    url = "http://dlib.net/files/dlib_face_recognition_resnet_model_v1.dat.bz2"
+    compressed = path + ".bz2"
+
+    urllib.request.urlretrieve(url, compressed)
+
+    with bz2.open(compressed, 'rb') as f_in:
+        with open(path, 'wb') as f_out:
+            f_out.write(f_in.read())
+
+    os.remove(compressed)
+    print("[INFO] Face model ready!")
 #get linux installed apps
 
 def get_linux_apps():
@@ -216,6 +246,33 @@ def get_linux_apps():
 
     return apps
 
+def hash_pin(pin):
+    return bcrypt.hashpw(pin.encode(), bcrypt.gensalt()).decode()
+
+import bcrypt
+
+def verify_pin(input_pin, stored_hash):
+    if not input_pin or not stored_hash:
+        return False
+
+    # Convert both to strings and remove any accidental whitespace
+    input_pin = str(input_pin).strip()
+    stored_hash = str(stored_hash).strip()
+
+    try:
+        # Check if it's a bcrypt hash
+        if stored_hash.startswith("$2b$"):
+            # bcrypt.checkpw requires bytes
+            return bcrypt.checkpw(
+                input_pin.encode('utf-8'), 
+                stored_hash.encode('utf-8')
+            )
+        
+        # Fallback for plain text (e.g., if you change it back to "0000")
+        return input_pin == stored_hash
+    except Exception as e:
+        print(f"❌ Bcrypt Error: {e}")
+        return False
 
 
 LOCKED_APPS_FILE = "config/locked_apps.json"
@@ -230,6 +287,37 @@ def read_locked_apps():
 def save_locked_apps(data):
     with open(LOCKED_APPS_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
+def save_user(email, pin):
+    import os, json
+
+    email = email.strip().lower()
+    pin = str(pin).strip()
+
+    if os.path.exists("pin.json"):
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+    else:
+        db = {"users": []}
+
+    users = db.get("users", [])
+
+    existing = next((u for u in users if u["email"] == email), None)
+
+    if existing:
+        existing["pin"] = pin
+    else:
+        users.append({
+            "email": email,
+            "pin": pin
+        })
+
+    db["users"] = users
+
+    with open("pin.json", "w") as f:
+        json.dump(db, f, indent=4)
+
+    print("✅ PIN SAVED:", email)
 
 LINUX_APP_DIRS = [
     "/usr/share/applications",
@@ -256,7 +344,7 @@ def save_pin(email, new_pin):
 
     for user in db["users"]:
         if user["email"] == email:
-            user["pin"] = new_pin
+            user["pin"] = hash_pin(new_pin)
             break
 
     with open("pin.json", "w") as f:
@@ -278,8 +366,6 @@ def load_pin(email=None):
             # fallback: return first user's pin
             return data["users"][0].get("pin") if data["users"] else None
 
-    # OLD STRUCTURE (fallback)
-    return data.get("pin")
 
 
 def extract_desktop_icon(icon_name):
@@ -358,19 +444,12 @@ def email_exists(email):
         return False
 
 
-def get_stored_pin():
-    try:
-        with open('pin.json', 'r') as f:
-            data = json.load(f)
-            return str(data.get('pin'))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return "1234"  # Fallback default if file is missing
 
 
 def load_lock_db():
     if not os.path.exists(LOCK_DB):
         return {"locked": [], "settings": {}}
-    return json.load(open(LOCK_DB))
+    return json.load(open(LOCK_DB))     
 
 def save_lock_db(data):
     json.dump(data, open(LOCK_DB, "w"), indent=2)
@@ -400,7 +479,31 @@ def mobile_open_app(appname):
     return render_template("mobile_open_app.html", appname=appname)
 @app.route("/api/pin_exists")
 def api_pin_exists():
-    return jsonify({"exists": pin_exists()})
+    try:
+        if not os.path.exists("pin.json"):
+            return jsonify({"exists": False})
+        
+        try:
+            with open("pin.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return jsonify({"exists": False})
+                
+                data = json.loads(content)
+                
+                # Check if there are any users
+                has_users = len(data.get("users", [])) > 0
+                
+                return jsonify({
+                    "exists": has_users,
+                    "has_users": has_users
+                })
+        except json.JSONDecodeError:
+            return jsonify({"exists": False})
+            
+    except Exception as e:
+        print(f"Error checking PIN exists: {e}")
+        return jsonify({"exists": False})
 @app.route('/reset')
 def reset():
     return render_template('reset.html')
@@ -460,42 +563,75 @@ def logout():
 
 @app.route("/create_pin")
 def create_pin_page():
-    if os.path.exists("pin.json"):
-        with open("pin.json", "r") as f:
-            data = json.load(f)
-            if data.get("pin"):
-                return redirect("/mobile")   # 🔒 block access
+    """
+    Create PIN page logic for multi-user system:
+    - Always show create pin page (allows multiple user registration)
+    - But add a button to go to mobile if already have account
+    """
+    try:
+        # Check if any users exist
+        users_exist = False
+        
+        if os.path.exists("pin.json"):
+            try:
+                with open("pin.json", "r") as f:
+                    content = f.read().strip()
+                    if content:
+                        db = json.loads(content)
+                        users_exist = len(db.get("users", [])) > 0
+            except:
+                pass
+        
+        # Always show create pin page, but pass a flag
+        return render_template("create_pin.html", users_exist=users_exist)
+        
+    except Exception as e:
+        print(f"Error in create_pin_page: {e}")
+        return render_template("create_pin.html", users_exist=False)
 
-    return render_template("create_pin.html")
-
-@app.route("/api/send_create_otp", methods=["POST"])
-def send_create_otp():
-    data = request.json
-    email = data.get("email")
-
-    # reuse your existing OTP logic
-    return request_reset()
-
-
-@app.route("/api/verify_create_otp", methods=["POST"])
-def verify_create_otp():
+@app.route("/api/create_pin", methods=["POST"])
+def api_create_pin():
     data = request.get_json() or {}
 
-    email = data.get("email")
-    code = data.get("code")
+    email = (data.get("email") or "").strip().lower()
+    new_pin = data.get("pin")
 
-    db = load_users()
+    if not email or not new_pin:
+        return jsonify({"msg": "Missing data"}), 400
 
-    if db.get("reset_code") != code:
-        return jsonify({"message": "Invalid OTP"}), 400
+    # 🔹 Load existing users
+    if os.path.exists("pin.json"):
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+    else:
+        db = {"users": []}
 
-    db["temp_email"] = email
-    save_users(db)
+    # 🔹 Check duplicate email
+    for user in db.get("users", []):
+        if user.get("email") == email:
+            return jsonify({
+                "msg": "Email already exists"
+            }), 400
 
-    return jsonify({"message": "OTP verified"})
+    # ✅ Add new user
+    db["users"].append({
+        "email": email,
+        "pin": hash_pin(new_pin)
+    })
+
+    with open("pin.json", "w") as f:
+        json.dump(db, f, indent=2)
+
+    return jsonify({"msg": "PIN created successfully"})
+
+
+
+
 
 @app.route("/api/launch_app", methods=["POST"])
 def launch_app():
+    if IS_CLOUD:
+        return jsonify({"status": "disabled on cloud"})
     data = request.get_json() or {}
     appid = data.get("app")
 
@@ -569,6 +705,8 @@ def launch_app():
 
 @app.route("/api/system_lock_app", methods=["POST"])
 def system_lock_app():
+    if IS_CLOUD:
+        return jsonify({"status": "disabled on cloud"})
     import os
 
     data = request.get_json()
@@ -610,7 +748,8 @@ Terminal=false
 @app.route("/api/system_unlock_app", methods=["POST"])
 def system_unlock_app():
     import os
-
+    if IS_CLOUD:
+        return jsonify({"status": "disabled on cloud"})
     data = request.get_json()
     appid = data.get("app_id")
 
@@ -624,61 +763,184 @@ def system_unlock_app():
     return {"status": "ok", "msg": "No system lock file found"}
 
 
+import json
+import bcrypt
+from flask import request, jsonify
+
 @app.route("/api/enroll_from_camera", methods=["POST"])
 def api_enroll_from_camera():
+    try:
+        # Support both JSON and form data
+        if request.is_json:
+            data = request.get_json(force=True)
+            username = data.get("name", "").strip()
+            pin = str(data.get("pin", "")).strip()
+            images = data.get("images", [])
+        else:
+            username = request.form.get("name", "").strip()
+            pin = str(request.form.get("pin", "")).strip()
+            images = request.form.getlist("images[]")
 
+        print(f"📥 ENROLL REQUEST: username={username}, images={len(images)}")
 
+        # 🔒 PIN VALIDATION
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({
+                "status": "error",
+                "msg": "PIN must be exactly 4 digits"
+            }), 400
 
-    name = (request.form.get("name") or "").strip()
-    pin = request.form.get("pin")
-    images = request.form.getlist("images[]") or []
-    single_img = request.form.get("image")
+        # 🔴 Face engine check
+        if detector is None or sp is None or facerec is None:
+            return jsonify({
+                "status": "error",
+                "msg": "Face engine not initialized"
+            }), 500
 
-    if single_img and not images:
-        images = [single_img]
+        # Validate input
+        if not username:
+            return jsonify({"status": "error", "msg": "Username required"}), 400
 
-    if pin != load_pin():
-        return jsonify({"status": "error", "msg": "Invalid PIN"}), 400
+        if not images:
+            return jsonify({"status": "error", "msg": "No images received"}), 400
 
-    if not name:
-        return jsonify({"status": "error", "msg": "Name required"}), 400
+        # Clean username
+        import re
+        clean_username = re.sub(r'[^a-zA-Z0-9_]', '_', username)
+        
+        # Check if user exists in database
+        user_exists = False
+        user_data = None
+        
+        if os.path.exists("pin.json"):
+            with open("pin.json", "r") as f:
+                db = json.load(f)
+            
+            for user in db.get("users", []):
+                if user.get("username") == clean_username:
+                    user_exists = True
+                    user_data = user
+                    break
+        
+        if not user_exists:
+            return jsonify({
+                "status": "error",
+                "msg": f"User '{clean_username}' not found. Please create account first."
+            }), 404
+        
+        # Verify PIN
+        import bcrypt
+        if not bcrypt.checkpw(pin.encode(), user_data["pin"].encode()):
+            return jsonify({
+                "status": "error",
+                "msg": "Invalid PIN"
+            }), 401
+        
+        # Create user folder in known_faces
+        user_dir = os.path.join("known_faces", clean_username)
+        os.makedirs(user_dir, exist_ok=True)
 
-    if not images:
-        return jsonify({"status": "error", "msg": "No images received"}), 400
+        new_encodings = []
+        frames = []
 
-    frames = []
-    encodings = []
+        # Process images
+        for i, data_url in enumerate(images):
+            try:
+                encoded = data_url.split(",", 1)[1] if "," in data_url else data_url
+                img_bytes = base64.b64decode(encoded)
 
-    for data_url in images:
-        try:
-            header, encoded = data_url.split(",", 1)
-            img_bytes = base64.b64decode(encoded)
-            img = Image.open(BytesIO(img_bytes)).convert("RGB")
-            frame = np.array(img)
+                img = Image.open(BytesIO(img_bytes)).convert("RGB")
+                frame = np.array(img)
 
-            dets = detector(frame, 1)
-            if len(dets) == 0:
+                dets = detector(frame, 1)
+
+                if len(dets) == 0:
+                    print(f"⚠️ No face detected in image {i}")
+                    continue
+
+                shape = sp(frame, dets[0])
+                enc = np.array(facerec.compute_face_descriptor(frame, shape))
+
+                new_encodings.append(enc)
+                frames.append(frame)
+
+            except Exception as img_error:
+                print(f"❌ Image {i} error:", img_error)
                 continue
 
-            shape = sp(frame, dets[0])
-            descriptor = facerec.compute_face_descriptor(frame, shape)
-            enc = np.array(descriptor)
+        if not new_encodings:
+            return jsonify({
+                "status": "error",
+                "msg": "No valid face detected"
+            }), 400
 
-            encodings.append(enc)
-            frames.append(frame)
+        # Check if this face is already enrolled for ANY user
+        if os.path.exists("known_faces"):
+            for existing_user in os.listdir("known_faces"):
+                if existing_user == clean_username:
+                    continue  # Skip current user when checking for duplicates
+                    
+                user_path = os.path.join("known_faces", existing_user)
+                if not os.path.isdir(user_path):
+                    continue
+                
+                for f_name in os.listdir(user_path):
+                    if f_name.endswith(".npy"):
+                        try:
+                            known_enc = np.load(os.path.join(user_path, f_name))
+                            # Check against first captured face
+                            dist = np.linalg.norm(known_enc - new_encodings[0])
+                            
+                            if dist < 0.5:  # Same face threshold
+                                return jsonify({
+                                    "status": "error",
+                                    "msg": f"⚠️ This face is already registered as '{existing_user}'. Duplicate enrollment not allowed."
+                                }), 400
+                        except Exception as e:
+                            print(f"⚠️ Encoding read error: {e}")
 
-        except Exception as e:
-            print("Enroll error:", e)
+        # Save face encodings for this user
+        for i, (frame, enc) in enumerate(zip(frames, new_encodings)):
+            existing_files = [f for f in os.listdir(user_dir) if f.startswith("face_") and f.endswith(".npy")]
+            next_idx = len(existing_files)
+            
+            enc_filename = f"face_{next_idx}.npy"
+            np.save(os.path.join(user_dir, enc_filename), enc)
+            
+            img_filename = f"face_{next_idx}.jpg"
+            img_path = os.path.join(user_dir, img_filename)
+            Image.fromarray(frame).save(img_path)
+        
+        # Update user's face_enrolled status
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        for user in db.get("users", []):
+            if user.get("username") == clean_username:
+                user["face_enrolled"] = True
+                user["face_folder"] = clean_username
+                user["updated_at"] = time.time()
+                break
+        
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
 
-    if len(encodings) == 0:
-        return jsonify({"status": "error", "msg": "No face detected"}), 400
+        print(f"✅ Face enrolled for user: {clean_username} with {len(new_encodings)} face(s)")
+        
+        return jsonify({
+            "status": "ok",
+            "msg": f"Face enrolled successfully for {clean_username}"
+        })
 
-    save_encoding_and_images(name, frames, encodings)
-
-    return jsonify({
-        "status": "ok",
-        "msg": f"User '{name}' enrolled."
-    })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("❌ ENROLL ERROR:", str(e))
+        return jsonify({
+            "status": "error",
+            "msg": str(e)
+        }), 500
+    
 
 @app.route("/mobile/dashboard")
 def mobile_dashboard():
@@ -692,40 +954,7 @@ def api_list_apps():
     apps = get_linux_apps()
     return jsonify({"status": "ok", "apps": apps})
 
-@app.route("/api/create_pin", methods=["POST"])
-def api_create_pin():
-    data = request.get_json() or {}
 
-    email = (data.get("email") or "").strip().lower()
-    new_pin = data.get("pin")
-
-    if not email or not new_pin:
-        return jsonify({"msg": "Missing data"}), 400
-
-    # 🔹 Load existing users
-    if os.path.exists("pin.json"):
-        with open("pin.json", "r") as f:
-            db = json.load(f)
-    else:
-        db = {"users": []}
-
-    # 🔹 Check duplicate email
-    for user in db.get("users", []):
-        if user.get("email") == email:
-            return jsonify({
-                "msg": "Email already exists"
-            }), 400
-
-    # ✅ Add new user
-    db["users"].append({
-        "email": email,
-        "pin": new_pin
-    })
-
-    with open("pin.json", "w") as f:
-        json.dump(db, f, indent=2)
-
-    return jsonify({"msg": "PIN created successfully"})
 @app.route("/api/send_otp", methods=["POST"])
 def send_otp():
     # send email OTP
@@ -750,47 +979,92 @@ import json
 
 @app.route("/api/verify_reset_code", methods=["POST"])
 def verify_reset_code():
-    data = request.get_json() or {}
-    code = (data.get("code") or "").strip()
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        code = data.get("code", "").strip()
+        
+        print(f"🔐 Verifying reset code for {email}: {code}")
+        
+        if not email or not code:
+            return jsonify({"status": "error", "message": "Missing data"}), 400
+        
+        # Check in reset_tokens first
+        if email in reset_tokens:
+            token = reset_tokens[email]
+            if time.time() > token["expires"]:
+                del reset_tokens[email]
+                return jsonify({"status": "error", "message": "Code expired"}), 400
+            
+            if code == token["code"]:
+                return jsonify({
+                    "status": "success", 
+                    "message": "Code verified",
+                    "username": token.get("username")
+                })
+        
+        # Also check in database
+        if os.path.exists("pin.json"):
+            with open("pin.json", "r") as f:
+                db = json.load(f)
+            
+            if db.get("reset_code") == code and db.get("reset_email") == email:
+                return jsonify({
+                    "status": "success", 
+                    "message": "Code verified"
+                })
+        
+        return jsonify({"status": "error", "message": "Invalid code"}), 400
+        
+    except Exception as e:
+        print(f"❌ Verify code error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    with open("pin.json", "r") as f:
-        pin_data = json.load(f)
-
-    if pin_data.get("reset_code") != code:
-        return jsonify({"message": "Invalid code"}), 400
-
-    return jsonify({"message": "Code verified"}), 200
 
 @app.route("/api/set_new_pin", methods=["POST"])
-def set_new_pin():
-    data = request.get_json() or {}
-    new_pin = data.get("new_pin")
+def api_set_new_pin():
+    data = request.get_json()
+    email_input = data.get("email", "").strip().lower()
+    new_pin = str(data.get("new_pin", "")).strip()
 
-    if not new_pin or len(new_pin) != 4:
-        return jsonify({"status": "error", "msg": "Invalid PIN"}), 400
+    if len(new_pin) != 4:
+        return jsonify({"status": "error", "message": "PIN must be 4 digits"}), 400
 
     try:
         with open("pin.json", "r") as f:
             db = json.load(f)
-    except:
-        return jsonify({"status": "error", "msg": "Database error"}), 500
 
-    # ✅ UPDATE GLOBAL PIN
-    db["pin"] = new_pin
+        # Verify email exists in your 'emails' list
+        if email_input in [e.strip().lower() for e in db.get("emails", [])]:
+            
+            # CRITICAL: Call hash_pin() here to encrypt it
+            db["pin"] = hash_pin(new_pin) 
+            
+            with open("pin.json", "w") as f:
+                json.dump(db, f, indent=2)
+                
+            return jsonify({"status": "ok", "message": "PIN encrypted and saved!"})
+        
+        return jsonify({"status": "error", "message": "Email not found"}), 404
 
-    with open("pin.json", "w") as f:
-        json.dump(db, f, indent=2)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
 
-    return jsonify({"status": "ok", "msg": "PIN updated"})
-# ---------- Get PIN (single-user or by email) ----------
-# WARNING: exposing PIN over GET is insecure; we provide it for local-only usage.
-
-
-@app.route("/api/get_pin")
+@app.route("/api/get_pin", methods=["GET"])
 def get_pin():
-    with open("pin.json", "r") as f:
-        pin_data = json.load(f)
-    return jsonify({"pin": pin_data.get("pin")})
+    try:
+        # Ensure the file exists before reading
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "error", "msg": "PIN configuration missing"}), 404
+            
+        with open("pin.json", "r") as f:
+            data = json.load(f)
+        
+        # Return the pin for the frontend to use in validation
+        return jsonify({"pin": data.get("pin")})
+    except Exception as e:
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 
 @app.route("/api/reset_main_pin", methods=["POST"])
@@ -801,7 +1075,8 @@ def api_reset_main_pin():
     if not new_pin:
         return jsonify({"status": "error", "msg": "PIN required"}), 400
 
-    save_pin(new_pin)
+    email = data.get("email")
+    save_pin(email, new_pin)
     return jsonify({"status": "ok"})
 
 @app.route("/api/lock_app", methods=["POST"])
@@ -954,51 +1229,6 @@ def list_installed_apps():
     return jsonify({"status": "ok", "apps": apps})
 
 
-@app.route("/api/unlock_from_camera", methods=["POST"])
-def api_unlock_from_camera():
-
-    if IS_CLOUD:
-        return jsonify({"status": "error", "msg": "Face recognition disabled on cloud"})
-
-    data_url = request.form.get("image")
-    if not data_url:
-        return jsonify({"status": "error", "msg": "No image"}), 400
-
-    try:
-        header, encoded = data_url.split(",", 1)
-        img = Image.open(BytesIO(base64.b64decode(encoded))).convert("RGB")
-        frame = np.array(img)
-    except:
-        return jsonify({"status": "error", "msg": "Bad image"}), 400
-
-    dets = detector(frame, 1)
-    if len(dets) == 0:
-        return jsonify({"status": "error", "msg": "No face"}), 400
-
-    shape = sp(frame, dets[0])
-    encoding = np.array(facerec.compute_face_descriptor(frame, shape))
-
-    best_match = None
-    best_dist = 0.6
-
-    if os.path.exists("known_faces"):
-        for person in os.listdir("known_faces"):
-            enc_path = f"known_faces/{person}/{person}.npy"
-            if not os.path.exists(enc_path):
-                continue
-
-            known_enc = np.load(enc_path)
-            dist = np.linalg.norm(known_enc - encoding)
-
-            if dist < best_dist:
-                best_dist = dist
-                best_match = person
-
-    if best_match:
-        return jsonify({"status": "ok", "user": best_match})
-
-    return jsonify({"status": "error", "msg": "Unknown face"}), 400
-
 
 @app.route("/api/set_apps", methods=["POST"])
 def api_set_apps():
@@ -1020,6 +1250,8 @@ def api_set_apps():
 # 2. Get locked apps for a user
 @app.route("/api/get_apps/<user>")
 def api_get_apps(user):
+    if IS_CLOUD:
+        return jsonify({"status": "disabled"})
     db = load_apps()
     return jsonify({
         "status": "ok",
@@ -1053,74 +1285,105 @@ def api_open_app_face():
     return jsonify({"status": "ok", "user": user})
 
 # 4. Password fallback
-@app.route("/api/open_app_password", methods=["POST"])
-def api_open_app_password():
-    password = request.form.get("password")
-    appname = request.form.get("appname")
+@app.route('/api/open_app_password', methods=['POST'])
+def open_app_password():
+    req_data = request.get_json()
+    user_email = req_data.get("email")
+    user_pin = req_data.get("pin")
 
-    email = request.form.get("email")
+    with open('pin.json', 'r') as f:
+        pin_data = json.load(f)
 
-    if password == load_pin(email):
-        return jsonify({"status": "ok"})
-        return jsonify({"status": "ok"})
+    # ✅ Fix: Check if email is in the list of authorized emails
+    if user_email in pin_data.get("emails", []):
+        # Proceed to check bcrypt hash of the PIN
+        stored_hash = pin_data.get("pin")
+        if bcrypt.checkpw(user_pin.encode(), stored_hash.encode()):
+            return jsonify({"status": "ok", "msg": "Unlocked"})
+        else:
+            return jsonify({"status": "error", "msg": "Invalid PIN"}), 401
+    else:
+        # This triggers the 403 error you saw
+        return jsonify({"status": "error", "msg": "Invalid Credentials."}), 403
 
-
-    return jsonify({"status": "error", "msg": "Wrong password"})
-
+       
 # check old Security PIN
 @app.route("/api/check_old_pin", methods=["POST"])
 def api_check_old_pin():
-    old_pin = request.form.get("old_pin", "").strip()
-
-    if not old_pin:
-        return jsonify({"status": "error", "msg": "Enter old PIN"})
-
     try:
+        data = request.get_json()
+        email = data.get("email")
+        old_pin = data.get("old_pin")
+
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "error", "msg": "Database missing"}), 404
+
         with open("pin.json", "r") as f:
             db = json.load(f)
-    except:
-        return jsonify({"status": "error", "msg": "Database error"})
 
-    # ✅ check global PIN
-    if old_pin == db.get("pin"):
-        return jsonify({"status": "ok", "msg": "Old PIN verified"})
-    else:
-        return jsonify({"status": "error", "msg": "Incorrect old PIN"})
+        # ✅ FIX: Check if the email is in your authorized 'emails' list
+        if "emails" in db and email in db["emails"]:
+            stored_hash = db.get("pin") # The hash is at the top level
+            
+            # Verify the PIN using bcrypt
+            if bcrypt.checkpw(old_pin.encode(), stored_hash.encode()):
+                return jsonify({"status": "ok", "msg": "PIN verified"})
+            else:
+                return jsonify({"status": "error", "msg": "Incorrect old PIN"}), 401
+        else:
+            return jsonify({"status": "error", "msg": "Email not authorized"}), 403
+
+    except Exception as e:
+        print(f"Error in check_old_pin: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 # ------------------------------
 #  CHANGE SECURITY PIN
 # ------------------------------
 @app.route("/api/change_pin", methods=["POST"])
-def api_change_pin():
-    old_pin = request.form.get("old_pin")
-    new_pin = request.form.get("new_pin")
+def change_pin():
+    try:
+        # Use force=True to handle potential header issues
+        data = request.get_json(force=True)
+        
+        email = data.get("email")
+        old_pin = data.get("old_pin")
+        new_pin = data.get("new_pin")
 
-    pin_file = "config/pin.txt"
-    os.makedirs("config", exist_ok=True)
+        # Validation: If any are missing, Flask returns 400
+        if not all([email, old_pin, new_pin]):
+            return jsonify({"status": "error", "msg": "Missing required fields"}), 400
 
-    # Create pin.txt if missing
-    with open(pin_file, "w") as f:
-        f.write(load_pin() or "0000")
+        with open("pin.json", "r") as f:
+            db = json.load(f)
 
+        # Check if email is in the authorized list
+        if "emails" not in db or email not in db["emails"]:
+            return jsonify({"status": "error", "msg": "Unauthorized identity"}), 403
 
-    with open(pin_file, "r") as f:
-        stored_pin = f.read().strip()
+        # Verify old PIN hash
+        stored_hash = db.get("pin")
+        if not bcrypt.checkpw(old_pin.encode(), stored_hash.encode()):
+            return jsonify({"status": "error", "msg": "Old PIN verification failed"}), 401
 
-    if old_pin != stored_pin:
-        return jsonify({"status": "error", "msg": "Old PIN incorrect"}), 400
+        # Hash new PIN and save
+        new_hash = bcrypt.hashpw(new_pin.encode(), bcrypt.gensalt()).decode()
+        db["pin"] = new_hash
+        
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=2)
 
-    if len(new_pin) < 4:
-        return jsonify({"status": "error", "msg": "PIN must be at least 4 digits"}), 400
+        return jsonify({"status": "ok", "msg": "PIN updated successfully"})
 
-    with open(pin_file, "w") as f:
-        f.write(new_pin)
-
-    return jsonify({"status": "ok", "msg": "PIN updated successfully!"})
-
+    except Exception as e:
+        print(f"Change PIN Error: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 500
+    
 #reset Security PIN
 @app.route("/api/reset_pin", methods=["POST"])
 def api_reset_pin():
     new_pin = request.form.get("pin", "").strip()
+    email = request.form.get("email")
 
     if not new_pin or len(new_pin) != 4:
         return jsonify({"status": "error", "msg": "PIN must be 4 digits"}), 400
@@ -1131,14 +1394,15 @@ def api_reset_pin():
     except:
         return jsonify({"status": "error", "msg": "Database missing"}), 500
 
-    # ✅ update global PIN
-    db["pin"] = new_pin
+    user = next((u for u in db["users"] if u["email"] == email), None)
+
+    if user:
+        user["pin"] = hash_pin(new_pin)
 
     with open("pin.json", "w") as f:
         json.dump(db, f, indent=2)
 
     return jsonify({"status": "ok", "msg": "PIN updated successfully"})
-
 # reset Security PIN - send reset code via emailreset_tokens = {}   # email → {code, expires}
 @app.route("/api/send_reset_email", methods=["POST"])
 def api_send_reset_email():
@@ -1212,22 +1476,41 @@ def api_set_email():
     return jsonify({"status": "ok", "msg": "Email registered!"})
 
 
-@app.route("/api/list_users")
+@app.route("/api/list_users", methods=["GET"])
 def list_users():
-    base = "known_faces"
-    if not os.path.exists(base):
-        return jsonify({"status": "ok", "users": []})
-
-    users = []
-    for name in os.listdir(base):
-        if os.path.isdir(os.path.join(base, name)):
-            users.append(name)
-
-    return jsonify({"status": "ok", "users": users})
-
+    """List all registered users from pin.json"""
+    try:
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "ok", "users": []})
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        users = []
+        for user in db.get("users", []):
+            users.append({
+                "username": user.get("username"),
+                "display_name": user.get("display_name"),
+                "face_enrolled": user.get("face_enrolled", False),
+                "emails": user.get("emails", [])
+            })
+        
+        return jsonify({
+            "status": "ok", 
+            "users": users,
+            "count": len(users)
+        })
+        
+    except Exception as e:
+        print(f"Error listing users: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 @app.route("/api/get_all_users")
 def api_get_all_users():
+    if IS_CLOUD:
+        return jsonify({"status": "disabled for security"})
+    if not session.get("admin"):
+        return jsonify({"error": "Unauthorized"}), 403
     base = "known_faces"
     if not os.path.exists(base):
         return jsonify({"users": []})
@@ -1241,57 +1524,31 @@ def api_get_all_users():
 
 
 
-@app.route("/api/delete_user", methods=["POST"])
-def api_delete_user():
-    user = request.form.get("user")
-
-    if not user:
-        return jsonify({"status": "error", "msg": "Missing user"}), 400
-
-    folder = os.path.join("known_faces", user)
-
-    if not os.path.exists(folder):
-        return jsonify({"status": "error", "msg": "User does not exist"}), 404
-
-    # delete all images + encoding
-    for f in os.listdir(folder):
-        os.remove(os.path.join(folder, f))
-
-    os.rmdir(folder)
-
-    return jsonify({"status": "ok", "msg": f"User '{user}' deleted"})
-
-
 
 
 @app.route("/api/register_email", methods=["POST"])
 def register_email():
-    email = request.form.get("email", "").strip().lower()
-
-    if not email:
-        return jsonify({"status": "error", "msg": "Email required"}), 400
-
     try:
+        data = request.get_json()
+        new_email = data.get("email")
+
         with open("pin.json", "r") as f:
             db = json.load(f)
-    except:
-        db = {}
 
-    # ensure structure
-    if "emails" not in db:
-        db["emails"] = []
+        # Ensure "emails" key exists as a list
+        if "emails" not in db or not isinstance(db["emails"], list):
+            db["emails"] = []
 
-    if "pin" not in db:
-        db["pin"] = "1234"
+        if new_email and new_email not in db["emails"]:
+            db["emails"].append(new_email)
+            with open("pin.json", "w") as f:
+                json.dump(db, f, indent=2)
+            return jsonify({"status": "ok"})
+        
+        return jsonify({"status": "exists", "msg": "Email already registered"})
+    except Exception as e:
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
-    # add email if not exists
-    if email not in db["emails"]:
-        db["emails"].append(email)
-
-    with open("pin.json", "w") as f:
-        json.dump(db, f, indent=2)
-
-    return jsonify({"status": "ok", "msg": "Email registered"})
 
 @app.route("/api/get_email")
 def api_get_email():
@@ -1313,43 +1570,84 @@ def api_delete_email():
         os.remove(file)
     return jsonify({"status": "ok", "msg": "Email removed"})
 
-@app.route("/api/get_saved_email")
+@app.route("/api/get_saved_email", methods=["GET"])
 def get_saved_email():
     try:
-        with open("pin.json", "r") as f:
-            db = json.load(f)
-
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "error", "msg": "No database found"}), 404
+        
+        try:
+            with open("pin.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return jsonify({"status": "ok", "emails": []}), 200
+                db = json.loads(content)
+        except json.JSONDecodeError:
+            return jsonify({"status": "error", "msg": "Database corrupted"}), 500
+        
+        # Get all emails from all users
+        all_emails = []
+        
+        # Get emails from users array
+        for user in db.get("users", []):
+            user_emails = user.get("emails", [])
+            all_emails.extend(user_emails)
+        
+        # Remove duplicates
+        all_emails = list(set(all_emails))
+        
         return jsonify({
             "status": "ok",
-            "emails": db.get("emails", [])
+            "emails": all_emails,
+            "count": len(all_emails)
         })
-
+        
     except Exception as e:
-        return jsonify({"status": "error", "msg": str(e)})
+        print(f"Error getting saved emails: {e}")
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 @app.route("/api/delete_saved_email", methods=["POST"])
 def delete_saved_email():
-    data = request.get_json()
-    email = data.get("email")
-
-    if not email:
-        return jsonify({"status": "error", "msg": "Email required"}), 400
-
     try:
-        with open("accounts.json", "r") as f:
-            accounts = json.load(f)
+        data = request.get_json()
+        email_to_remove = data.get("email", "").strip().lower()
 
-        accounts["users"] = [
-            u for u in accounts.get("users", [])
-            if u.get("email") != email
-        ]
+        if not email_to_remove:
+            return jsonify({"status": "error", "msg": "Email required"}), 400
 
-        with open("accounts.json", "w") as f:
-            json.dump(accounts, f, indent=2)
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "error", "msg": "Database not found"}), 404
 
-        return jsonify({"status": "ok", "msg": "Email deleted"})
+        try:
+            with open("pin.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return jsonify({"status": "error", "msg": "Database empty"}), 500
+                db = json.loads(content)
+        except json.JSONDecodeError:
+            return jsonify({"status": "error", "msg": "Database corrupted"}), 500
+
+        # Find and remove email from user's emails list
+        email_found = False
+        for user in db.get("users", []):
+            if email_to_remove in user.get("emails", []):
+                user["emails"].remove(email_to_remove)
+                user["updated_at"] = time.time()
+                email_found = True
+                print(f"✅ Removed email {email_to_remove} from user {user.get('username')}")
+                break
+
+        if not email_found:
+            return jsonify({"status": "error", "msg": "Email not found"}), 404
+
+        # Save the updated database
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
+
+        return jsonify({"status": "ok", "msg": "Email removed successfully"})
 
     except Exception as e:
+        print(f"Error deleting saved email: {e}")
         return jsonify({"status": "error", "msg": str(e)}), 500
 
 
@@ -1395,109 +1693,208 @@ def verify_face():
 
 
 # Add this to your Python backend
-# In a real app, '1234' would be retrieved from your database
-STORED_PIN = "1234" 
-@app.route("/api/verify-pin", methods=['POST'])
-def verify_pin():
-    data = request.get_json() or {}
-    user_input_pin = str(data.get('pin', '')).strip()
-
-    if not user_input_pin:
-        return jsonify({"status": "fail", "message": "No PIN entered"})
-
+# In a real app, '1234' would be retrieved from your databas
+@app.route("/api/verify-pin", methods=["POST"])
+def api_verify_pin():
     try:
-        with open("pin.json", "r") as f:
-            db = json.load(f)
-    except:
-        return jsonify({"status": "fail", "message": "PIN database error"})
+        data = request.get_json(silent=True) or {}
 
-    # ✅ OPTION 1: GLOBAL PIN (recommended)
-    if user_input_pin == str(db.get("pin")):
-        return jsonify({"status": "success"})
+        print("📥 VERIFY PIN REQUEST:", data)
 
-    # ✅ OPTION 2: MULTI-USER PIN (fallback)
-    for user in db.get("users", []):
-        if str(user.get("pin")) == user_input_pin:
-            return jsonify({"status": "success"})
+        # Get username and PIN
+        username = str(data.get("username", data.get("email", ""))).strip().lower()
+        user_input_pin = str(data.get("pin", "")).strip()
 
-    return jsonify({"status": "fail", "message": "Incorrect PIN"})
+        if not username or not user_input_pin:
+            return jsonify({
+                "status": "fail",
+                "message": "Missing username or PIN"
+            }), 400
+
+        if not user_input_pin.isdigit() or len(user_input_pin) != 4:
+            return jsonify({
+                "status": "fail",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+
+        # Check if pin.json exists
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "fail",
+                "message": "PIN database not found"
+            }), 500
+
+        # Load database
+        try:
+            with open("pin.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return jsonify({
+                        "status": "fail",
+                        "message": "Database is empty"
+                    }), 500
+                db = json.loads(content)
+        except json.JSONDecodeError:
+            return jsonify({
+                "status": "fail",
+                "message": "Database corrupted"
+            }), 500
+
+        # Find user by username
+        user = None
+        for u in db.get("users", []):
+            if u.get("username") == username:
+                user = u
+                break
+
+        if not user:
+            return jsonify({
+                "status": "fail",
+                "message": f"User '{username}' not found"
+            }), 404
+
+        stored_pin = user.get("pin")
+        
+        if not stored_pin:
+            return jsonify({
+                "status": "fail",
+                "message": "PIN not set for this user"
+            }), 500
+
+        # Verify PIN using bcrypt
+        import bcrypt
+        try:
+            if bcrypt.checkpw(user_input_pin.encode(), stored_pin.encode()):
+                print(f"✅ PIN verified for user: {username}")
+                return jsonify({
+                    "status": "success",
+                    "message": "PIN verified",
+                    "username": username,
+                    "emails": user.get("emails", [])
+                })
+            else:
+                print(f"❌ Invalid PIN for user: {username}")
+                return jsonify({
+                    "status": "fail",
+                    "message": "Incorrect PIN"
+                }), 401
+        except Exception as e:
+            print(f"❌ BCrypt error: {e}")
+            return jsonify({
+                "status": "error",
+                "message": "PIN verification failed"
+            }), 500
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("❌ VERIFY PIN ERROR:", str(e))
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
 
 @app.route("/api/request_reset", methods=["POST"])
-def request_reset():
-    data = request.get_json() or {}
-
-    email = (data.get("email") or "").strip().lower()
-    mode = data.get("mode", "reset")
-
-    # -----------------------------
-    # LOAD DATA
-    # -----------------------------
-    if not os.path.exists("pin.json"):
-        return jsonify({"message": "No users found"}), 400
-
-    with open("pin.json", "r") as f:
-        pin_data = json.load(f)
-
-    users = pin_data.get("users", [])
-    # Check in pin.json
-    user = next((u for u in users if u.get("email") == email), None)
-
-    # If not found, check accounts.json
-    if not user:
+def api_request_reset():
+    try:
+        data = request.get_json()
+        email_input = data.get("email", "").strip().lower()
+        
+        print(f"📧 Reset request for email: {email_input}")
+        
+        if not email_input:
+            return jsonify({"status": "error", "message": "Email required"}), 400
+        
+        # Load database
+        if not os.path.exists("pin.json"):
+            return jsonify({"status": "error", "message": "Database not found"}), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Check if email exists in ANY user's emails list
+        email_found = False
+        username = None
+        
+        # Check in users array
+        for user in db.get("users", []):
+            if email_input in user.get("emails", []):
+                email_found = True
+                username = user.get("username")
+                print(f"✅ Email found for user: {username}")
+                break
+        
+        # Also check in old emails list for backward compatibility
+        if not email_found:
+            if email_input in db.get("emails", []):
+                email_found = True
+                print(f"✅ Email found in old emails list")
+        
+        if not email_found:
+            print(f"❌ Email not found: {email_input}")
+            return jsonify({
+                "status": "error", 
+                "message": f"Email '{email_input}' is not registered"
+            }), 404
+        
+        # Generate OTP
+        code = str(random.randint(100000, 999999))
+        expires = time.time() + 600  # 10 minutes
+        
+        # Store in reset_tokens
+        reset_tokens[email_input] = {
+            "code": code,
+            "expires": expires,
+            "username": username
+        }
+        
+        # Save reset code to database
+        db["reset_code"] = code
+        db["reset_email"] = email_input
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=2)
+        
+        # Send email
         try:
-            with open("accounts.json", "r") as f:
-                accounts = json.load(f)
-        except:
-            accounts = {"users": []}
+            msg = Message(
+                subject="🔐 CyberLock PIN Reset Code",
+                recipients=[email_input],
+                sender=app.config['MAIL_DEFAULT_SENDER']
+            )
+            msg.body = f"""
+Your PIN reset code is: {code}
 
-        if "users" not in accounts:
-            accounts["users"] = []
+This code expires in 10 minutes.
 
-        user = next((u for u in accounts["users"] if u.get("email") == email), None)
+If you didn't request this reset, please ignore this email.
 
-    # Final validation
-    if not user:
-        return jsonify({"message": "Email not registered"}), 400
-    # -----------------------------
-    # VALIDATION
-    # -----------------------------
-    if mode == "reset":
-        if not user:
-            return jsonify({"message": "Email not registered"}), 400
+- CyberLock Security Team
+"""
+            mail.send(msg)
+            print(f"✅ Reset code sent to {email_input}: {code}")
+        except Exception as e:
+            print(f"❌ Mail error: {e}")
+            return jsonify({"status": "error", "message": "Failed to send email"}), 500
+        
+        return jsonify({
+            "status": "ok", 
+            "message": "Reset code sent to your email",
+            "email": email_input
+        })
+        
+    except Exception as e:
+        print(f"❌ Reset error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    elif mode == "create":
-        if user:
-            return jsonify({"message": "Email already has PIN"}), 400
-
-    # -----------------------------
-    # GENERATE OTP
-    # -----------------------------
-    otp = "{:06d}".format(random.randint(0, 999999))
-
-    pin_data["reset_code"] = otp
-    pin_data["temp_email"] = email
-
-    # -----------------------------
-    # SAVE
-    # -----------------------------
-    with open("pin.json", "w") as f:
-        json.dump(pin_data, f, indent=2)
-
-    # -----------------------------
-    # SEND EMAIL
-    # -----------------------------
-    msg = Message(
-        subject="CyberLock OTP Code",
-        recipients=[email],
-        sender=app.config['MAIL_DEFAULT_SENDER']
-    )
-    msg.body = f"Your OTP is: {otp}"
-    mail.send(msg)
-
-    return jsonify({"message": "OTP sent!"}), 200
+FACE_DATA_DIR = "known_faces"
 
 @app.route("/api/verify-face-js", methods=["POST"])
 def verify_face_js():
+    if IS_CLOUD:
+        return jsonify({"status": "disabled"})
     data = request.json
     incoming = np.array(data.get("descriptor"))
 
@@ -1514,25 +1911,1038 @@ def verify_face_js():
 
     return jsonify({"status": "fail"})
     
+@app.route("/api/unlock_from_camera", methods=["POST"])
+def api_unlock_from_camera():
+    if IS_CLOUD:
+        return jsonify({"status": "error", "msg": "Face recognition disabled on cloud"})
+
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        data_url = data.get("image")
+
+        if not data_url:
+            return jsonify({"status": "error", "msg": "No image data received"}), 400
+
+        # Decode image
+        try:
+            if "," in data_url:
+                header, encoded = data_url.split(",", 1)
+            else:
+                encoded = data_url
+
+            img_bytes = base64.b64decode(encoded)
+            img = Image.open(BytesIO(img_bytes)).convert("RGB")
+            frame = np.array(img)
+        except Exception as e:
+            print(f"❌ Decode Error: {e}")
+            return jsonify({"status": "error", "msg": "Bad image format"}), 400
+
+        # Face Detection and Recognition
+        try:
+            dets = detector(frame, 1)
+            if len(dets) == 0:
+                return jsonify({"status": "error", "msg": "No face detected in frame"}), 400
+
+            # Extract Face Descriptor
+            shape = sp(frame, dets[0])
+            encoding = np.array(facerec.compute_face_descriptor(frame, shape))
+
+            best_match = None
+            best_dist = 0.6
+            all_matches = []
+
+            # Compare with all known faces in all user folders
+            if os.path.exists("known_faces"):
+                for person in os.listdir("known_faces"):
+                    person_path = os.path.join("known_faces", person)
+                    if not os.path.isdir(person_path):
+                        continue
+                    
+                    person_matches = []
+                    for f_name in os.listdir(person_path):
+                        if f_name.endswith(".npy"):
+                            try:
+                                known_enc = np.load(os.path.join(person_path, f_name))
+                                dist = np.linalg.norm(known_enc - encoding)
+                                person_matches.append(dist)
+                                
+                                if dist < best_dist:
+                                    best_dist = dist
+                                    best_match = person
+                            except Exception as e:
+                                print(f"⚠️ Encoding read error for {person}/{f_name}: {e}")
+                    
+                    if person_matches:
+                        avg_dist = sum(person_matches) / len(person_matches)
+                        all_matches.append({"user": person, "distance": avg_dist})
+                        print(f"📊 {person}: avg distance = {avg_dist:.3f}")
+
+            if best_match:
+                confidence = round(float(1 - best_dist), 2)
+                print(f"✅ Face recognized: {best_match} (confidence: {confidence})")
+                return jsonify({
+                    "status": "ok",
+                    "user": best_match,
+                    "confidence": confidence,
+                    "msg": f"Welcome {best_match}!"
+                })
+            else:
+                print("❌ Face not recognized")
+                return jsonify({
+                    "status": "error",
+                    "msg": "Face not recognized. Please ensure good lighting and face clearly visible."
+                }), 401
+
+        except Exception as e:
+            print(f"❌ Recognition Error: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"status": "error", "msg": "AI processing failed"}), 500
+
+    except Exception as e:
+        print(f"❌ Unlock error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "msg": str(e)}), 500
+
+@app.route("/api/verify_system_pin", methods=["POST"])
+def verify_system_pin():
+    """Simple PIN verification without username requirement"""
+    try:
+        data = request.get_json() or {}
+        user_input_pin = str(data.get("pin", "")).strip()
+
+        print(f"🔐 Verifying system PIN: {user_input_pin}")
+
+        if not user_input_pin:
+            return jsonify({
+                "status": "fail",
+                "message": "PIN required"
+            }), 400
+
+        if not user_input_pin.isdigit() or len(user_input_pin) != 4:
+            return jsonify({
+                "status": "fail",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+
+        # Check if pin.json exists
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "fail",
+                "message": "PIN database not found"
+            }), 500
+
+        # Load database with error handling
+        try:
+            with open("pin.json", "r") as f:
+                content = f.read().strip()
+                if not content:
+                    return jsonify({
+                        "status": "fail",
+                        "message": "Database is empty"
+                    }), 500
+                db = json.loads(content)
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON decode error: {e}")
+            return jsonify({
+                "status": "fail",
+                "message": "Database corrupted"
+            }), 500
+
+        # Check if there are any users
+        users = db.get("users", [])
+        if not users:
+            return jsonify({
+                "status": "fail",
+                "message": "No users registered"
+            }), 404
+
+        # For system PIN, check the first user's PIN (or admin PIN)
+        # Or check all users' PINs
+        import bcrypt
+        
+        for user in users:
+            stored_pin = user.get("pin")
+            if stored_pin:
+                try:
+                    if bcrypt.checkpw(user_input_pin.encode(), stored_pin.encode()):
+                        print(f"✅ PIN verified for user: {user.get('username')}")
+                        return jsonify({
+                            "status": "success",
+                            "message": "PIN verified",
+                            "username": user.get("username")
+                        })
+                except Exception as e:
+                    print(f"❌ BCrypt error for {user.get('username')}: {e}")
+                    continue
+        
+        # If no match found
+        print("❌ Invalid system PIN")
+        return jsonify({
+            "status": "fail",
+            "message": "Invalid PIN"
+        }), 401
+
+    except Exception as e:
+        print(f"❌ System PIN verify error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+import os
+import time
+import numpy as np
+
+# Folder where face data is stored
+
+
 @app.route("/api/save-face", methods=["POST"])
 def save_face():
     data = request.json
+    email = data.get("email")
+    incoming_descriptor = np.array(data.get("descriptor"))
 
-    name = data.get("name")
-    descriptors = data.get("descriptors")
+    if not email or incoming_descriptor is None:
+        return jsonify({"status": "error", "msg": "Missing data"}), 400
 
-    db = load_faces()
-    db[name] = descriptors
+    db = load_faces() # Loads your face_db.json
+
+    # --- DUPLICATE CHECK LOGIC ---
+    # Check if this face already exists anywhere in the database under ANY email
+    for name, desc_list in db.items():
+        for existing_desc in desc_list:
+            known = np.array(existing_desc)
+            # Calculate how similar the faces are
+            dist = np.linalg.norm(known - incoming_descriptor)
+
+            # If distance < 0.4, it is definitely the same person
+            if dist < 0.4:
+                return jsonify({
+                    "status": "exists", 
+                    "msg": f"Access Denied: You are already enrolled as '{name}'."
+                }), 403
+
+    # --- SAVE LOGIC (If not a duplicate) ---
+    if email in db:
+        db[email].append(incoming_descriptor.tolist())
+    else:
+        db[email] = [incoming_descriptor.tolist()]
 
     save_faces(db)
+    return jsonify({"status": "ok", "msg": "Enrollment successful!"})
 
-    return jsonify({"status": "ok", "msg": "Face saved!"})
+
+@app.route("/api/check_email_exists", methods=["POST"])
+def check_email_exists():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        
+        if not email:
+            return jsonify({"exists": False}), 200
+        
+        # Load database with error handling
+        if os.path.exists("pin.json"):
+            try:
+                with open("pin.json", "r") as f:
+                    content = f.read().strip()
+                    if content:
+                        db = json.loads(content)
+                    else:
+                        return jsonify({"exists": False}), 200
+            except json.JSONDecodeError:
+                return jsonify({"exists": False}), 200
+        else:
+            return jsonify({"exists": False}), 200
+        
+        # Check in users array
+        for user in db.get("users", []):
+            if email in user.get("emails", []):
+                return jsonify({
+                    "exists": True,
+                    "message": f"Email already registered to user '{user.get('username')}'"
+                }), 200
+        
+        return jsonify({"exists": False}), 200
+        
+    except Exception as e:
+        print(f"Error checking email: {e}")
+        return jsonify({"exists": False}), 200
 
 
-# HTTPS SERVER
-# ------------------------------
-import os
+@app.route("/api/add_email_to_account", methods=["POST"])
+def add_email_to_account():
+    """Add additional email to existing account"""
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        new_email = data.get("email", "").strip().lower()
+        pin = data.get("pin", "").strip()
+        
+        # Validate inputs
+        if not username or not new_email or not pin:
+            return jsonify({
+                "status": "error",
+                "message": "Username, email, and PIN required"
+            }), 400
+        
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({
+                "status": "error",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+        
+        # Load database
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "error",
+                "message": "Database not found"
+            }), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Find user
+        user = None
+        for u in db.get("users", []):
+            if u.get("username") == username:
+                user = u
+                break
+        
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": f"User '{username}' not found"
+            }), 404
+        
+        # Verify PIN
+        import bcrypt
+        if not bcrypt.checkpw(pin.encode(), user["pin"].encode()):
+            return jsonify({
+                "status": "error",
+                "message": "Invalid PIN"
+            }), 401
+        
+        # Check if email already exists
+        if new_email in user.get("emails", []):
+            return jsonify({
+                "status": "error",
+                "message": "Email already registered to this account"
+            }), 400
+        
+        # Check if email is used by another user
+        for u in db.get("users", []):
+            if new_email in u.get("emails", []):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Email already registered to user '{u.get('username')}'"
+                }), 400
+        
+        # Add email to user
+        user["emails"].append(new_email)
+        user["updated_at"] = time.time()
+        
+        # Add to global emails list
+        if "emails" not in db:
+            db["emails"] = []
+        db["emails"].append(new_email)
+        
+        # Save database
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Email {new_email} added to account {username}",
+            "username": username,
+            "emails": user["emails"]
+        }), 200
+        
+    except Exception as e:
+        print(f"Error adding email: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+
+@app.route("/api/verify_pin_for_user", methods=["POST"])
+def verify_pin_for_user():
+    """Verify PIN for a specific user by username"""
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        pin = data.get("pin", "").strip()
+        
+        if not username or not pin:
+            return jsonify({
+                "status": "error",
+                "message": "Username and PIN required"
+            }), 400
+        
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({
+                "status": "error",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+        
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "error",
+                "message": "Database not found"
+            }), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Find user by username
+        user = None
+        for u in db.get("users", []):
+            if u.get("username") == username:
+                user = u
+                break
+        
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": f"User '{username}' not found"
+            }), 404
+        
+        # Verify PIN
+        import bcrypt
+        if bcrypt.checkpw(pin.encode(), user["pin"].encode()):
+            return jsonify({
+                "status": "success",
+                "message": "PIN verified",
+                "username": username,
+                "emails": user.get("emails", [])
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid PIN"
+            }), 401
+            
+    except Exception as e:
+        print(f"Error verifying PIN: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/change_pin_by_username", methods=["POST"])
+def change_pin_by_username():
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        old_pin = data.get("old_pin", "").strip()
+        new_pin = data.get("new_pin", "").strip()
+        
+        if not username or not old_pin or not new_pin:
+            return jsonify({
+                "status": "error",
+                "message": "Missing required fields"
+            }), 400
+        
+        if not new_pin.isdigit() or len(new_pin) != 4:
+            return jsonify({
+                "status": "error",
+                "message": "New PIN must be exactly 4 digits"
+            }), 400
+        
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "error",
+                "message": "Database not found"
+            }), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Find user by username
+        user_index = None
+        user = None
+        for i, u in enumerate(db.get("users", [])):
+            if u.get("username") == username:
+                user_index = i
+                user = u
+                break
+        
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": f"User '{username}' not found"
+            }), 404
+        
+        # Verify old PIN
+        import bcrypt
+        if not bcrypt.checkpw(old_pin.encode(), user["pin"].encode()):
+            return jsonify({
+                "status": "error",
+                "message": "Incorrect old PIN"
+            }), 401
+        
+        # Hash new PIN
+        hashed_new_pin = bcrypt.hashpw(new_pin.encode(), bcrypt.gensalt()).decode()
+        
+        # Update user's PIN
+        db["users"][user_index]["pin"] = hashed_new_pin
+        db["users"][user_index]["updated_at"] = time.time()
+        
+        # Save database
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
+        
+        print(f"✅ PIN updated for user: {username}")
+        
+        return jsonify({
+            "status": "success",
+            "message": "PIN updated successfully"
+        })
+        
+    except Exception as e:
+        print(f"Error changing PIN: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
+@app.route("/api/send_create_otp", methods=["POST"])
+def send_create_otp():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        
+        if not email:
+            return jsonify({"status": "error", "message": "Email required"}), 400
+        
+        # Generate OTP
+        code = str(random.randint(100000, 999999))
+        expires = time.time() + 600  # 10 minutes
+        
+        # Store OTP
+        reset_tokens[email] = {
+            "code": code,
+            "expires": expires
+        }
+        
+        # Send email
+        msg = Message(
+            subject="Your Account Verification Code",
+            recipients=[email],
+            sender=app.config['MAIL_DEFAULT_SENDER']
+        )
+        msg.body = f"Your verification code is: {code}\n\nThis code expires in 10 minutes.\n\nWelcome to CyberLock!"
+        mail.send(msg)
+        
+        print(f"✅ OTP sent to {email}: {code}")
+        
+        return jsonify({
+            "status": "success",
+            "message": "OTP sent successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"Error sending OTP: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/verify_create_otp", methods=["POST"])
+def verify_create_otp():
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        code = data.get("code", "").strip()
+        
+        if not email or not code:
+            return jsonify({"status": "error", "message": "Missing data"}), 400
+        
+        # Check OTP
+        if email not in reset_tokens:
+            return jsonify({"status": "error", "message": "No OTP request found"}), 400
+        
+        token = reset_tokens[email]
+        
+        # Check expiration
+        if time.time() > token["expires"]:
+            del reset_tokens[email]
+            return jsonify({"status": "error", "message": "OTP expired"}), 400
+        
+        # Verify code
+        if code != token["code"]:
+            return jsonify({"status": "error", "message": "Invalid OTP"}), 400
+        
+        # OTP verified
+        del reset_tokens[email]
+        
+        return jsonify({
+            "status": "success",
+            "message": "OTP verified"
+        }), 200
+        
+    except Exception as e:
+        print(f"Error verifying OTP: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/check_username_exists", methods=["POST"])
+def check_username_exists():
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        
+        if not username:
+            return jsonify({"exists": False}), 200
+        
+        # Validate username format
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            return jsonify({
+                "exists": False,
+                "invalid": True,
+                "message": "Username can only contain letters, numbers, and underscores"
+            }), 200
+        
+        # Load database with error handling
+        if os.path.exists("pin.json"):
+            try:
+                with open("pin.json", "r") as f:
+                    content = f.read().strip()
+                    if content:
+                        db = json.loads(content)
+                    else:
+                        return jsonify({"exists": False}), 200
+            except json.JSONDecodeError:
+                return jsonify({"exists": False}), 200
+        else:
+            return jsonify({"exists": False}), 200
+        
+        # Check in users array
+        for user in db.get("users", []):
+            if user.get("username") == username:
+                return jsonify({"exists": True, "message": "Username already taken"}), 200
+        
+        return jsonify({"exists": False}), 200
+        
+    except Exception as e:
+        print(f"Error checking username: {e}")
+        return jsonify({"exists": False}), 200
+
+
+@app.route("/api/create_user_account", methods=["POST"])
+def create_user_account():
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip().lower()
+        display_name = data.get("display_name", username).strip()
+        email = data.get("email", "").strip().lower()
+        pin = data.get("pin", "").strip()
+        
+        print(f"📝 Creating account - Username: {username}, Email: {email}")
+        
+        # Validate PIN
+        if not pin or len(pin) != 4 or not pin.isdigit():
+            return jsonify({
+                "status": "error",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+        
+        # Validate email
+        if not email or '@' not in email:
+            return jsonify({
+                "status": "error",
+                "message": "Valid email required"
+            }), 400
+        
+        # Validate username
+        if not username or len(username) < 3:
+            return jsonify({
+                "status": "error",
+                "message": "Username must be at least 3 characters"
+            }), 400
+        
+        # Check if username contains only allowed characters
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            return jsonify({
+                "status": "error",
+                "message": "Username can only contain letters, numbers, and underscores"
+            }), 400
+        
+        # Load existing database with error handling
+        db = {"users": [], "settings": {}}
+        
+        if os.path.exists("pin.json"):
+            try:
+                with open("pin.json", "r") as f:
+                    content = f.read().strip()
+                    if content:
+                        db = json.loads(content)
+                    else:
+                        print("⚠️ pin.json is empty, creating new structure")
+                        db = {"users": [], "settings": {}}
+            except json.JSONDecodeError as e:
+                print(f"⚠️ Error parsing pin.json: {e}, creating new structure")
+                db = {"users": [], "settings": {}}
+        else:
+            print("📁 pin.json doesn't exist, creating new")
+        
+        # Ensure required fields exist
+        if "users" not in db:
+            db["users"] = []
+        if "settings" not in db:
+            db["settings"] = {
+                "allow_new_registration": True,
+                "require_email_verification": True
+            }
+        
+        # Check if username already exists
+        for user in db["users"]:
+            if user.get("username") == username:
+                return jsonify({
+                    "status": "error",
+                    "message": f"Username '{username}' already taken"
+                }), 400
+        
+        # Check if email already exists in any user's emails
+        for user in db["users"]:
+            if email in user.get("emails", []):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Email already registered to user '{user.get('username')}'"
+                }), 400
+        
+        # Hash the PIN
+        import bcrypt
+        hashed_pin = bcrypt.hashpw(pin.encode(), bcrypt.gensalt()).decode()
+        
+        # Create new user
+        new_user = {
+            "username": username,
+            "display_name": display_name,
+            "emails": [email],
+            "pin": hashed_pin,
+            "created_at": time.time(),
+            "updated_at": time.time(),
+            "face_enrolled": False,
+            "face_folder": username,
+            "active": True,
+            "role": "user"
+        }
+        
+        # Add to users list
+        db["users"].append(new_user)
+        
+        # Save to file
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
+        
+        print(f"✅ New user created: {username} (email: {email})")
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Account '{username}' created successfully",
+            "username": username,
+            "email": email
+        }), 200
+        
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/add_email_to_user", methods=["POST"])
+def add_email_to_user():
+    """Add additional email to existing user account"""
+    try:
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        new_email = data.get("email", "").strip().lower()
+        pin = data.get("pin", "").strip()
+        
+        if not username or not new_email or not pin:
+            return jsonify({
+                "status": "error",
+                "message": "Username, email, and PIN required"
+            }), 400
+        
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({
+                "status": "error",
+                "message": "PIN must be exactly 4 digits"
+            }), 400
+        
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "error",
+                "message": "Database not found"
+            }), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Find user
+        user_index = None
+        user = None
+        for i, u in enumerate(db.get("users", [])):
+            if u.get("username") == username:
+                user_index = i
+                user = u
+                break
+        
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": f"User '{username}' not found"
+            }), 404
+        
+        # Verify PIN
+        import bcrypt
+        if not bcrypt.checkpw(pin.encode(), user["pin"].encode()):
+            return jsonify({
+                "status": "error",
+                "message": "Invalid PIN"
+            }), 401
+        
+        # Check if email already exists in any user
+        for u in db.get("users", []):
+            if new_email in u.get("emails", []):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Email already registered to user '{u.get('username')}'"
+                }), 400
+        
+        # Add email to user
+        db["users"][user_index]["emails"].append(new_email)
+        db["users"][user_index]["updated_at"] = time.time()
+        
+        # Save database
+        with open("pin.json", "w") as f:
+            json.dump(db, f, indent=4)
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Email {new_email} added to account {username}",
+            "username": username,
+            "emails": db["users"][user_index]["emails"]
+        }), 200
+        
+    except Exception as e:
+        print(f"Error adding email: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/get_user_by_email", methods=["POST"])
+def get_user_by_email():
+    """Get user account by any email"""
+    try:
+        data = request.get_json()
+        email = data.get("email", "").strip().lower()
+        
+        if not email:
+            return jsonify({
+                "status": "error",
+                "message": "Email required"
+            }), 400
+        
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "error",
+                "message": "Database not found"
+            }), 500
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        # Find user with this email
+        for user in db.get("users", []):
+            if email in user.get("emails", []):
+                return jsonify({
+                    "status": "success",
+                    "username": user.get("username"),
+                    "display_name": user.get("display_name"),
+                    "emails": user.get("emails"),
+                    "face_enrolled": user.get("face_enrolled", False),
+                    "role": user.get("role", "user")
+                }), 200
+        
+        return jsonify({
+            "status": "error",
+            "message": "Email not registered"
+        }), 404
+        
+    except Exception as e:
+        print(f"Error getting user: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/list_all_users", methods=["GET"])
+def list_all_users():
+    """List all registered users"""
+    try:
+        if not os.path.exists("pin.json"):
+            return jsonify({
+                "status": "success",
+                "users": []
+            }), 200
+        
+        with open("pin.json", "r") as f:
+            db = json.load(f)
+        
+        users = []
+        for user in db.get("users", []):
+            users.append({
+                "username": user.get("username"),
+                "display_name": user.get("display_name"),
+                "emails": user.get("emails"),
+                "face_enrolled": user.get("face_enrolled", False),
+                "created_at": user.get("created_at"),
+                "role": user.get("role", "user")
+            })
+        
+        return jsonify({
+            "status": "success",
+            "users": users,
+            "count": len(users)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error listing users: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.route("/api/delete_user", methods=["POST"])
+def api_delete_user():
+    try:
+        # Support both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+            user = data.get("user", "").strip()
+        else:
+            # Handle form data
+            user = request.form.get("user", "").strip()
+        
+        print(f"🗑️ Delete request for user: {user}")
+        
+        if not user:
+            return jsonify({"status": "error", "msg": "Missing user"}), 400
+        
+        # Check if user exists in database
+        user_exists = False
+        user_data = None
+        user_index = None
+        
+        if os.path.exists("pin.json"):
+            with open("pin.json", "r") as f:
+                db = json.load(f)
+            
+            for i, u in enumerate(db.get("users", [])):
+                if u.get("username") == user:
+                    user_exists = True
+                    user_data = u
+                    user_index = i
+                    break
+        
+        if not user_exists:
+            return jsonify({"status": "error", "msg": f"User '{user}' does not exist"}), 404
+        
+        # Delete face folder if exists
+        face_folder = os.path.join("known_faces", user)
+        if os.path.exists(face_folder):
+            import shutil
+            shutil.rmtree(face_folder)
+            print(f"✅ Deleted face folder: {face_folder}")
+        
+        # Remove user from database
+        if user_index is not None:
+            db["users"].pop(user_index)
+            
+            # Also remove from emails list if they were the last user with that email
+            # (optional cleanup)
+            
+            # Save updated database
+            with open("pin.json", "w") as f:
+                json.dump(db, f, indent=4)
+            
+            print(f"✅ User '{user}' deleted successfully")
+            
+            return jsonify({
+                "status": "ok", 
+                "msg": f"User '{user}' deleted successfully"
+            })
+        else:
+            return jsonify({"status": "error", "msg": "User not found in database"}), 404
+        
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "msg": f"System error: {str(e)}"}), 500
+    
+@app.route("/admin/add-user")
+def admin_add_user():
+    """Admin page to add new users (requires authentication)"""
+    # Check if admin is logged in (implement admin auth)
+    if not session.get("is_admin"):
+        return redirect("/mobile")
+    
+    return render_template("admin_add_user.html")
+
+@app.route("/api/admin_create_user", methods=["POST"])
+def admin_create_user():
+    """Admin-only endpoint to create new users"""
+    try:
+        # Check admin authentication
+        if not session.get("is_admin"):
+            return jsonify({"status": "error", "message": "Unauthorized"}), 403
+        
+        data = request.get_json()
+        username = data.get("username", "").strip().lower()
+        email = data.get("email", "").strip().lower()
+        pin = data.get("pin", "").strip()
+        
+        # Validation logic same as create_user_account
+        # ... (same validation code)
+        
+        # Create user without OTP verification (admin bypass)
+        # ... (create user logic)
+        
+        return jsonify({"status": "success", "message": "User created"})
+        
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+#######################################################################################################################
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    import os
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    port = int(os.environ.get("PORT", 5000))
+
+    # Use SSL
+    ssl_context = ('cert.pem', 'key.pem')
+
+    print("🔐 HTTPS running at: https://10.190.1.186:5000/mobile")
+    print("📍 Local: https://127.0.0.1:5000/mobile")
+
+    app.run(host="0.0.0.0", port=5000, debug=False, ssl_context=ssl_context)

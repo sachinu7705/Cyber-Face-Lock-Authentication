@@ -7,6 +7,36 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="/static/css/reset.css">
+    <style>
+        /* PIN input styling */
+        input[type="password"] {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 8px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .pin-error {
+            border-color: #ff4444 !important;
+            animation: shake 0.3s ease;
+        }
+        
+        .pin-success {
+            border-color: #4caf50 !important;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .message {
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
 
