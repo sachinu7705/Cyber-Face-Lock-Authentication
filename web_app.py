@@ -1,3 +1,21 @@
+import os
+
+# Detect if running on Render
+IS_RENDER = os.environ.get("RENDER") == "true"
+
+if IS_RENDER:
+    # On Render, we can't use camera or dlib
+    print("⚠️ Running on Render - Face recognition features disabled")
+    detector = None
+    sp = None
+    facerec = None
+else:
+    # Local development with face recognition
+    import cv2
+    import dlib
+    import face_recognition
+    
+    # Your existing face recognition code...
 import glob
 from pathlib import Path
 from shutil import copyfile
