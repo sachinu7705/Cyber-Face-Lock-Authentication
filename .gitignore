@@ -34,3 +34,9 @@ node_modules/
 
 # OS junk
 *.log
+# Security
+*.key
+*.pem
+security.log
+.env
+face_key.key
