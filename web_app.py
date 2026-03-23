@@ -772,6 +772,7 @@ def sanitize_input(text):
 @app.route("/api/enroll_from_camera", methods=["POST"])
 def api_enroll_from_camera():
     try:
+        # Support both JSON and form data
         if request.is_json:
             data = request.get_json(force=True)
             username = data.get("name", "").strip()
@@ -784,27 +785,32 @@ def api_enroll_from_camera():
 
         print(f"📥 ENROLL REQUEST: username={username}, images={len(images)}")
 
+        # PIN VALIDATION
         if not pin.isdigit() or len(pin) != 4:
             return jsonify({
                 "status": "error",
                 "msg": "PIN must be exactly 4 digits"
             }), 400
 
+        # Face engine check
         if detector is None or sp is None or facerec is None:
             return jsonify({
                 "status": "error",
                 "msg": "Face engine not initialized"
             }), 500
 
+        # Validate input
         if not username:
             return jsonify({"status": "error", "msg": "Username required"}), 400
 
         if not images:
             return jsonify({"status": "error", "msg": "No images received"}), 400
 
+        # Clean username
         import re
-        clean_username = re.sub(r'[^a-zA-Z0-9_]', '_', username)
+        clean_username = re.sub(r'[^a-zA-Z0-9_]', '_', username.lower())
         
+        # Check if user exists in database
         user_exists = False
         user_data = None
         
@@ -824,6 +830,7 @@ def api_enroll_from_camera():
                 "msg": f"User '{clean_username}' not found. Please create account first."
             }), 404
         
+        # Verify PIN
         import bcrypt
         if not bcrypt.checkpw(pin.encode(), user_data["pin"].encode()):
             return jsonify({
@@ -831,12 +838,14 @@ def api_enroll_from_camera():
                 "msg": "Invalid PIN"
             }), 401
         
+        # Create user folder in known_faces
         user_dir = os.path.join("known_faces", clean_username)
         os.makedirs(user_dir, exist_ok=True)
 
         new_encodings = []
         frames = []
 
+        # Process images
         for i, data_url in enumerate(images):
             try:
                 encoded = data_url.split(",", 1)[1] if "," in data_url else data_url
@@ -867,6 +876,7 @@ def api_enroll_from_camera():
                 "msg": "No valid face detected"
             }), 400
 
+        # Check if this face is already enrolled for ANY user
         if os.path.exists("known_faces"):
             for existing_user in os.listdir("known_faces"):
                 if existing_user == clean_username:
@@ -877,11 +887,9 @@ def api_enroll_from_camera():
                     continue
                 
                 for f_name in os.listdir(user_path):
-                    if f_name.endswith(".enc"):
+                    if f_name.endswith(".npy"):
                         try:
-                            with open(os.path.join(user_path, f_name), 'rb') as f:
-                                encrypted = f.read()
-                            known_enc = decrypt_face_encoding(encrypted)
+                            known_enc = np.load(os.path.join(user_path, f_name))
                             dist = np.linalg.norm(known_enc - new_encodings[0])
                             
                             if dist < 0.5:
@@ -892,18 +900,19 @@ def api_enroll_from_camera():
                         except Exception as e:
                             print(f"⚠️ Encoding read error: {e}")
 
+        # Save face encodings for this user
         for i, (frame, enc) in enumerate(zip(frames, new_encodings)):
-            existing_files = [f for f in os.listdir(user_dir) if f.startswith("face_") and f.endswith(".enc")]
+            existing_files = [f for f in os.listdir(user_dir) if f.startswith("face_") and f.endswith(".npy")]
             next_idx = len(existing_files)
             
-            enc_filename = f"face_{next_idx}.enc"
-            with open(os.path.join(user_dir, enc_filename), 'wb') as f:
-                f.write(encrypt_face_encoding(enc))
+            enc_filename = f"face_{next_idx}.npy"
+            np.save(os.path.join(user_dir, enc_filename), enc)
             
             img_filename = f"face_{next_idx}.jpg"
             img_path = os.path.join(user_dir, img_filename)
             Image.fromarray(frame).save(img_path)
         
+        # Update user's face_enrolled status
         with open("pin.json", "r") as f:
             db = json.load(f)
         
@@ -1830,6 +1839,7 @@ def api_unlock_from_camera():
         if not data_url:
             return jsonify({"status": "error", "msg": "No image data received"}), 400
 
+        # Decode image
         try:
             if "," in data_url:
                 header, encoded = data_url.split(",", 1)
@@ -1843,11 +1853,13 @@ def api_unlock_from_camera():
             print(f"❌ Decode Error: {e}")
             return jsonify({"status": "error", "msg": "Bad image format"}), 400
 
+        # Face Detection and Recognition
         try:
             dets = detector(frame, 1)
             if len(dets) == 0:
                 return jsonify({"status": "error", "msg": "No face detected in frame"}), 400
 
+            # Extract Face Descriptor
             shape = sp(frame, dets[0])
             encoding = np.array(facerec.compute_face_descriptor(frame, shape))
 
@@ -1855,21 +1867,48 @@ def api_unlock_from_camera():
             best_dist = 0.6
             all_matches = []
 
+            print("🔍 Searching for matching faces...")
+            
+            # Compare with all known faces in all user folders
             if os.path.exists("known_faces"):
                 for person in os.listdir("known_faces"):
                     person_path = os.path.join("known_faces", person)
                     if not os.path.isdir(person_path):
                         continue
                     
+                    print(f"📁 Checking user: {person}")
                     person_matches = []
+                    
                     for f_name in os.listdir(person_path):
-                        if f_name.endswith(".enc"):
+                        # Check both .npy and .enc formats
+                        if f_name.endswith(".npy"):
+                            try:
+                                known_enc = np.load(os.path.join(person_path, f_name))
+                                dist = np.linalg.norm(known_enc - encoding)
+                                person_matches.append(dist)
+                                print(f"  - {f_name}: distance = {dist:.4f}")
+                                
+                                if dist < best_dist:
+                                    best_dist = dist
+                                    best_match = person
+                            except Exception as e:
+                                print(f"⚠️ Encoding read error for {person}/{f_name}: {e}")
+                        elif f_name.endswith(".enc"):
                             try:
                                 with open(os.path.join(person_path, f_name), 'rb') as f:
                                     encrypted = f.read()
-                                known_enc = decrypt_face_encoding(encrypted)
+                                # Try to decrypt if using encryption
+                                try:
+                                    from cryptography.fernet import Fernet
+                                    decrypted = cipher.decrypt(encrypted)
+                                    known_enc = np.frombuffer(decrypted, dtype=np.float64)
+                                except:
+                                    # If decryption fails, maybe it's not encrypted
+                                    known_enc = np.load(os.path.join(person_path, f_name))
+                                
                                 dist = np.linalg.norm(known_enc - encoding)
                                 person_matches.append(dist)
+                                print(f"  - {f_name}: distance = {dist:.4f}")
                                 
                                 if dist < best_dist:
                                     best_dist = dist
@@ -1880,11 +1919,11 @@ def api_unlock_from_camera():
                     if person_matches:
                         avg_dist = sum(person_matches) / len(person_matches)
                         all_matches.append({"user": person, "distance": avg_dist})
-                        print(f"📊 {person}: avg distance = {avg_dist:.3f}")
+                        print(f"📊 {person}: best distance = {min(person_matches):.3f}, avg = {avg_dist:.3f}")
 
             if best_match:
                 confidence = round(float(1 - best_dist), 2)
-                print(f"✅ Face recognized: {best_match} (confidence: {confidence})")
+                print(f"✅ Face recognized: {best_match} (confidence: {confidence}, distance: {best_dist:.3f})")
                 return jsonify({
                     "status": "ok",
                     "user": best_match,
@@ -1892,7 +1931,8 @@ def api_unlock_from_camera():
                     "msg": f"Welcome {best_match}!"
                 })
             else:
-                print("❌ Face not recognized")
+                print("❌ Face not recognized - No match found")
+                print(f"   Best match distance: {best_dist:.3f} (threshold: 0.6)")
                 return jsonify({
                     "status": "error",
                     "msg": "Face not recognized. Please ensure good lighting and face clearly visible."
